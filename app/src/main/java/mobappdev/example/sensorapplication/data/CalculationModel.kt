@@ -1,6 +1,5 @@
 package mobappdev.example.sensorapplication.data
 
-import android.location.GnssMeasurement
 import android.util.Log
 import kotlin.math.atan
 import kotlin.math.pow
@@ -11,19 +10,20 @@ private const val TAG = "CalculationModel"
 object CalculationModel {
 
     fun getLinAccAngle(measurement: Triple<Float, Float, Float>) : Float {
-        val norm = normVector(measurement)
-
-
-        return atan(measurement.first / distance(measurement.second, measurement.third))
+        var pitch = atan(measurement.first / distance(measurement.second, measurement.third))
+        //var roll = atan(measurement.second / distance(measurement.first, measurement.third))
+        pitch = radiansToDegrees(pitch)
+        //roll = radiansToDegrees(roll)
+        //Log.d(TAG, pitch.toString())
+        //Log.d(TAG, roll.toString())
+        return pitch
     }
-    private fun distance (y: Float, z: Float): Float {
-        val value =  sqrt(y.pow(2) + z.pow(2))
-        Log.d(TAG, value.toString())
-        return value
+    private fun distance (a: Float, b: Float): Float {
+        return sqrt(a.pow(2) + b.pow(2))
     }
 
-    private fun normVector(m: Triple<Float, Float, Float>): Float {
-        return (m.first.pow(2) + m.second.pow(2) + m.third.pow(3))
+    private fun radiansToDegrees(rad: Float): Float {
+        return rad * (180 / Math.PI).toFloat()
     }
 
 
