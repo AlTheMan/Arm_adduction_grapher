@@ -65,6 +65,15 @@ class AndroidPolarController (
     override val hrList: StateFlow<List<Int>>
         get() = _hrList.asStateFlow()
 
+
+    private val _accList = MutableStateFlow<PolarAccelerometerData?>(null)
+    override val accList: StateFlow<PolarAccelerometerData?>
+        get() = _accList.asStateFlow()
+
+    private val _currentAcc = MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
+    override val currentAcc: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
+        get() = _currentAcc.asStateFlow()
+
     private val _connected = MutableStateFlow(false)
     override val connected: StateFlow<Boolean>
         get() = _connected.asStateFlow()
@@ -185,7 +194,7 @@ class AndroidPolarController (
 
      */
 
-    fun startAccStream(deviceId: String){
+    override fun startAccStream(deviceId: String){
         val isDisposed = accDisposable?.isDisposed ?: true
         if (isDisposed) {
             accDisposable = requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.ACC)
@@ -214,6 +223,12 @@ class AndroidPolarController (
             //accDisposable?.dispose()
             Log.d(TAG, "ACC Already streaming")
         }
+    }
+
+    override fun stopAccStreaming() {
+        _measuring.update { false }
+        accDisposable?.dispose()
+        _currentHR.update { null }
     }
 
 

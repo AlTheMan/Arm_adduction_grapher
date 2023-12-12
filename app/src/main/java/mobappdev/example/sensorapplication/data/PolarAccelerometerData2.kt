@@ -5,8 +5,8 @@ package mobappdev.example.sensorapplication.data
  * Polar accelerometer data.
  * @property samples from acceleration sensor. Each sample contains signed x,y,z axis value in millig
  */
-data class PolarAccelerometerData(
-    val samples: List<PolarAccelerometerDataSample>,
+data class PolarAccelerometerData2(
+    val samples: List<PolarAccelerometerDataSample2>,
     @Deprecated("Use the timestamp found in each sample")
     val timeStamp: Long
 ) {
@@ -18,7 +18,7 @@ data class PolarAccelerometerData(
      *  @property y axis value in millig (including gravity)
      *  @property z axis value in millig (including gravity)
      */
-    data class PolarAccelerometerDataSample(
+    data class PolarAccelerometerDataSample2(
         val timeStamp: Long,
         val x: Int,
         val y: Int,
