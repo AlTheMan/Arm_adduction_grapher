@@ -52,6 +52,14 @@ fun BluetoothDataScreen(
 
         }
         is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
+        is CombinedSensorData.LinAccData -> {
+            val triple = combinedSensorData.linAcc
+            if (triple == null){
+                "no data"
+            } else {
+                String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+            }
+        }
         else -> "-"
     }
 
@@ -124,6 +132,17 @@ fun BluetoothDataScreen(
                 )
             ) {
                 Text(text = "Start\nGyro Stream")
+            }
+
+            Button(
+                onClick = vm::startLinAcc,
+                enabled = (!state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\nImu Stream")
             }
         }
 

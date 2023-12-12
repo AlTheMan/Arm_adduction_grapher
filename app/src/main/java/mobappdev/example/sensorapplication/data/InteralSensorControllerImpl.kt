@@ -47,6 +47,8 @@ class InternalSensorControllerImpl(
     override val streamingGyro: StateFlow<Boolean>
         get() = _streamingGyro.asStateFlow()
 
+    private var _currentLinAcc: Triple<Float, Float, Float>? = null
+
     private val _streamingLinAcc = MutableStateFlow(false)
     override val streamingLinAcc: StateFlow<Boolean>
         get() = _streamingLinAcc.asStateFlow()
@@ -70,18 +72,28 @@ class InternalSensorControllerImpl(
             Log.e(LOG_TAG, "Imu sensor is already streaming")
             return
         }
+        Log.e(LOG_TAG, "Imu stream started")
         sensorManager.registerListener(this, imuSensor, SensorManager.SENSOR_DELAY_UI)
         GlobalScope.launch ( Dispatchers.Main ) {
             _streamingLinAcc.value = true;
             while (_streamingLinAcc.value) {
-                //_currentLinAccUI.update { _curre }
+                Log.e(LOG_TAG, _currentLinAcc.toString())
+                _currentLinAccUI.update { _currentLinAcc }
+                delay(500)
             }
         }
 
     }
 
     override fun stopImuStream() {
-        // Todo: implement
+        if(_streamingLinAcc.value) {
+            Log.d(LOG_TAG, "Stopping Imu Stream")
+            _currentLinAccUI.update { null }
+            sensorManager.unregisterListener(this, imuSensor)
+            _streamingLinAcc.value = false
+
+        }
+
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -113,6 +125,7 @@ class InternalSensorControllerImpl(
     override fun stopGyroStream() {
         if (_streamingGyro.value) {
             // Unregister the listener to stop receiving gyroscope events (automatically stops the coroutine as well
+            _currentGyroUI.update { null }
             sensorManager.unregisterListener(this, gyroSensor)
             _streamingGyro.value = false
         }
@@ -122,6 +135,10 @@ class InternalSensorControllerImpl(
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
             // Extract gyro data (angular speed around X, Y, and Z axes
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
+            _currentLinAcc = null;
+        }
+        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+            _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
         }
     }
 

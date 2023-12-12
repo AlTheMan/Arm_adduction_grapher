@@ -9,6 +9,9 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
+import android.provider.ContactsContract.Data
+import android.util.Log
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +26,7 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
 
+private const val LOG_TAG = "DataVM";
 @HiltViewModel
 class DataVM @Inject constructor(
     private val polarController: PolarController,
@@ -30,17 +34,20 @@ class DataVM @Inject constructor(
 ): ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
+    private val linAccDataFlow = internalSensorController.currentLinAccUI
     private val hrDataFlow = polarController.currentHR
-
     // Combine the two data flows
     val combinedDataFlow= combine(
         gyroDataFlow,
         hrDataFlow,
-    ) { gyro, hr ->
+        linAccDataFlow
+    ) { gyro, hr, linAcc ->
         if (hr != null ) {
             CombinedSensorData.HrData(hr)
         } else if (gyro != null) {
             CombinedSensorData.GyroData(gyro)
+        } else if (linAcc != null){
+            CombinedSensorData.LinAccData(linAcc)
         } else {
             null
         }
@@ -92,9 +99,16 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
+    fun startLinAcc() {
+        internalSensorController.startImuStream()
+        streamType = StreamType.LOCAL_ACC
+        _state.update { it.copy(measuring = true) }
+    }
+
     fun stopDataStream(){
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
+            StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             else -> {} // Do nothing
         }
@@ -115,4 +129,5 @@ enum class StreamType {
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
+    data class LinAccData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()
 }
