@@ -15,15 +15,20 @@ import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
 import com.polar.sdk.api.PolarBleApiDefaultImpl
 import com.polar.sdk.api.errors.PolarInvalidArgument
+import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarHrData
+import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
+import mobappdev.example.sensorapplication.ui.MainActivity
 import java.util.UUID
 
 class AndroidPolarController (
@@ -48,6 +53,8 @@ class AndroidPolarController (
     }
 
     private var hrDisposable: Disposable? = null
+    private var accDisposable: Disposable? = null
+    private var gyrDisposable: Disposable? = null
     private val TAG = "AndroidPolarController"
 
     private val _currentHR = MutableStateFlow<Int?>(null)
@@ -57,6 +64,15 @@ class AndroidPolarController (
     private val _hrList = MutableStateFlow<List<Int>>(emptyList())
     override val hrList: StateFlow<List<Int>>
         get() = _hrList.asStateFlow()
+
+
+    private val _accList = MutableStateFlow<PolarAccelerometerData?>(null)
+    override val accList: StateFlow<PolarAccelerometerData?>
+        get() = _accList.asStateFlow()
+
+    private val _currentAcc = MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
+    override val currentAcc: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
+        get() = _currentAcc.asStateFlow()
 
     private val _connected = MutableStateFlow(false)
     override val connected: StateFlow<Boolean>
@@ -147,4 +163,103 @@ class AndroidPolarController (
         hrDisposable?.dispose()
         _currentHR.update { null }
     }
+
+    /*
+    fun startAccStreaming2(deviceId: String) {
+        val isDisposed = accDisposable?.isDisposed ?: true
+        if(isDisposed) {
+            _measuring.update { true }
+            hrDisposable = api.startAccStreaming(deviceId)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { hrData: PolarHrData ->
+                        for (sample in hrData.samples) {
+                            _currentHR.update { sample.hr }
+                            _hrList.update { hrList ->
+                                hrList + sample.hr
+                            }
+                            Log.d(TAG, sample.hr.toString())
+                        }
+                    },
+                    { error: Throwable ->
+                        Log.e(TAG, "Hr stream failed.\nReason $error")
+                    },
+                    { Log.d(TAG, "Hr stream complete")}
+                )
+        } else {
+            Log.d(TAG, "Already streaming")
+        }
+
+    }
+
+     */
+
+    override fun startAccStream(deviceId: String){
+        val isDisposed = accDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            accDisposable = requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.ACC)
+                .flatMap { settings: PolarSensorSetting ->
+                    api.startAccStreaming(deviceId, settings)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { polarAccelerometerData: PolarAccelerometerData ->
+                        for (data in polarAccelerometerData.samples) {
+                            Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                        }
+                    },
+                    { error: Throwable ->
+                        //toggleButtonUp(accButton, R.string.start_acc_stream)
+                        Log.e(TAG, "ACC stream failed. Reason $error")
+                    },
+                    {
+                        //showToast("ACC stream complete")
+                        Log.d(TAG, "ACC stream complete")
+                    }
+                )
+        } else {
+            //toggleButtonUp(accButton, R.string.start_acc_stream)
+            // NOTE dispose will stop streaming if it is "running"
+            //accDisposable?.dispose()
+            Log.d(TAG, "ACC Already streaming")
+        }
+    }
+
+    override fun stopAccStreaming() {
+        _measuring.update { false }
+        accDisposable?.dispose()
+        _currentHR.update { null }
+    }
+
+
+
+
+    private fun requestStreamSettings(identifier: String, feature: PolarBleApi.PolarDeviceDataType): Flowable<PolarSensorSetting> {
+        val availableSettings = api.requestStreamSettings(identifier, feature)
+        val allSettings = api.requestFullStreamSettings(identifier, feature)
+            .onErrorReturn { error: Throwable ->
+                Log.w(TAG, "Full stream settings are not available for feature $feature. REASON: $error")
+                PolarSensorSetting(emptyMap())
+            }
+        return Single.zip(availableSettings, allSettings) { available: PolarSensorSetting, all: PolarSensorSetting ->
+            if (available.settings.isEmpty()) {
+                throw Throwable("Settings are not available")
+            } else {
+                Log.d(TAG, "Feature " + feature + " available settings " + available.settings)
+                Log.d(TAG, "Feature " + feature + " all settings " + all.settings)
+                return@zip android.util.Pair(available, all)
+            }
+        }
+            .observeOn(AndroidSchedulers.mainThread())
+            .toFlowable()
+            .flatMap { sensorSettings: android.util.Pair<PolarSensorSetting, PolarSensorSetting> ->
+                DialogUtility.showAllSettingsDialog(
+                    sensorSettings.first.settings,
+                    sensorSettings.second.settings
+                ).toFlowable()
+            }
+    }
+
+
 }
+
