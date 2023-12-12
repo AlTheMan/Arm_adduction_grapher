@@ -133,7 +133,25 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Start\nGyro Stream")
             }
+            Button(
+                onClick = vm::startAcc,
+                enabled = (!state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\next acc stream")
+            }
 
+
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth()
+        ){
             Button(
                 onClick = vm::startLinAcc,
                 enabled = (!state.measuring),
@@ -144,13 +162,6 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Start\nImu Stream")
             }
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.fillMaxWidth()
-        ){
             Button(
                 onClick = vm::stopDataStream,
                 enabled = (state.measuring),

@@ -205,6 +205,8 @@ class AndroidPolarController (
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
+                            _currentAcc.value=(data)
+                            //TODO: add to list
                             Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                         }
                     },
