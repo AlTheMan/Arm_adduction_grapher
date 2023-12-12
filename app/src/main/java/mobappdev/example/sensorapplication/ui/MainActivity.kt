@@ -26,7 +26,7 @@ import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     // Todo: Change for your own deviceID
-    private var deviceId = "B37EA42F"
+    private var deviceId = "B36B2C29"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
