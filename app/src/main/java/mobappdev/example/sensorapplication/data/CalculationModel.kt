@@ -1,37 +1,50 @@
 package mobappdev.example.sensorapplication.data
 
-import android.util.Log
 import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 private const val TAG = "CalculationModel"
+private const val alpha = 0.95F //TODO: Ändra från ui?
 
-object CalculationModel {
+class CalculationModel {
 
-    fun getLinAccAngle(measurement: Triple<Float, Float, Float>) : Float {
-        var pitch = atan(measurement.first / distance(measurement.second, measurement.third))
-        //var roll = atan(measurement.second / distance(measurement.first, measurement.third))
-        pitch = radiansToDegrees(pitch)
-        //roll = radiansToDegrees(roll)
-        //Log.d(TAG, pitch.toString())
-        //Log.d(TAG, roll.toString())
-        return pitch
+    private var angleMeasurements: MutableList<Float> = mutableListOf()
+
+    fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>): Float {
+        val pitch = getPitchAngle(axes)
+        return radiansToDegrees(linearAccelerationFilter(pitch))
     }
-    private fun distance (a: Float, b: Float): Float {
-        return sqrt(a.pow(2) + b.pow(2))
+
+    /** Rotate x-direction */
+    private fun getPitchAngle(axes: Triple<Float, Float, Float>): Float {
+        return atan(axes.first / distance(axes.second, axes.third))
+    }
+
+    /** Rotate y-direction */
+    private fun getRollAngle(axes: Triple<Float, Float, Float>): Float {
+        return atan(axes.second / distance(axes.first, axes.third))
     }
 
     private fun radiansToDegrees(rad: Float): Float {
         return rad * (180 / Math.PI).toFloat()
     }
 
+    private fun sensorFusionFilter(linAccAngle: Float, gyroAngle: Float): Float {
+        return alpha * linAccAngle + (1 - alpha) * gyroAngle
+    }
 
+    private fun linearAccelerationFilter(value: Float): Float {
+        if (angleMeasurements.isEmpty()) {
+            angleMeasurements.add(value)
+            return value
+        }
+        return (alpha * value) + (1 - alpha) * angleMeasurements.last()
+    }
 
-
-
-
-
+    private fun distance(a: Float, b: Float): Float {
+        return sqrt(a.pow(2) + b.pow(2))
+    }
 
 
 }

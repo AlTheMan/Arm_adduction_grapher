@@ -1,20 +1,9 @@
 package mobappdev.example.sensorapplication.data
 
-import android.app.Activity
-import android.app.Dialog
-import android.view.View
-import android.view.Window
-import android.widget.Button
-import android.widget.RadioGroup
-import android.widget.TextView
-import com.google.android.material.radiobutton.MaterialRadioButton
 import com.polar.sdk.api.model.PolarSensorSetting
 import com.polar.sdk.api.model.PolarSensorSetting.SettingType
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.SingleEmitter
-import mobappdev.example.sensorapplication.R
-import java.util.*
+import java.util.EnumMap
 
 object DialogUtility {
 

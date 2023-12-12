@@ -24,11 +24,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
+import javax.inject.Inject
 
-private const val LOG_TAG = "Internal Sensor Controller"
+private const val LOG_TAG = "InternalSensorController"
 
-class InternalSensorControllerImpl(
-    context: Context
+class InternalSensorControllerImpl @Inject constructor(
+    context: Context,
+    private val calculationModel: CalculationModel,
 ): InternalSensorController, SensorEventListener {
 
     // Expose acceleration to the UI
@@ -79,9 +81,6 @@ class InternalSensorControllerImpl(
             while (_streamingLinAcc.value) {
                 Log.e(LOG_TAG, _currentLinAcc.toString())
                 _currentLinAccUI.update { _currentLinAcc }
-                if (_currentLinAcc != null) {
-                    Log.d(LOG_TAG, CalculationModel.getLinAccAngle(_currentLinAcc!!).toString())
-                }
                 delay(1000)
             }
         }
@@ -142,6 +141,9 @@ class InternalSensorControllerImpl(
         }
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
+            if (_currentLinAcc != null) {
+                Log.d(LOG_TAG, calculationModel.getLinearAccelerationAngle(_currentLinAcc!!).toString())
+            }
         }
     }
 

@@ -15,6 +15,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mobappdev.example.sensorapplication.data.AndroidPolarController
+import mobappdev.example.sensorapplication.data.CalculationModel
 import mobappdev.example.sensorapplication.data.InternalSensorControllerImpl
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
@@ -24,6 +25,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideCalculationModel() : CalculationModel {
+        return CalculationModel()
+    }
+
     @Provides
     @Singleton
     fun providePolarController(@ApplicationContext context: Context): PolarController {
@@ -32,7 +40,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideInternalSensorController(@ApplicationContext context: Context): InternalSensorController {
-        return InternalSensorControllerImpl(context)
+    fun provideInternalSensorController(@ApplicationContext context: Context, calculationModel: CalculationModel): InternalSensorController {
+        return InternalSensorControllerImpl(context, calculationModel)
     }
+
+
 }
