@@ -17,6 +17,36 @@ import mobappdev.example.sensorapplication.R
 import java.util.*
 
 object DialogUtility {
+
+    fun showAllSettingsDialog(
+        available: Map<SettingType, Set<Int>>,
+        all: Map<SettingType, Set<Int>>
+    ): Single<PolarSensorSetting> {
+        return Single.create { emitter ->
+            try {
+                val selectedSettings = getDefaultSettings(available)
+                emitter.onSuccess(PolarSensorSetting(selectedSettings))
+            } catch (e: Exception) {
+                emitter.tryOnError(e)
+            }
+        }
+    }
+
+    private fun getDefaultSettings(availableSettings: Map<SettingType, Set<Int>>): MutableMap<SettingType, Int> {
+        val defaultSettings = EnumMap<SettingType, Int>(SettingType::class.java)
+        // Set default or preferred settings here
+        // Example:
+        availableSettings.forEach { (type, settings) ->
+            settings.firstOrNull()?.let {
+                defaultSettings[type] = it
+            }
+        }
+        return defaultSettings
+    }
+
+
+    /*
+
     fun showAllSettingsDialog(activity: Activity, available: Map<SettingType, Set<Int>>, all: Map<SettingType, Set<Int>>): Single<PolarSensorSetting> {
 
         // custom dialog
@@ -133,4 +163,7 @@ object DialogUtility {
             button.isChecked = true
         }
     }
+
+*/
 }
+

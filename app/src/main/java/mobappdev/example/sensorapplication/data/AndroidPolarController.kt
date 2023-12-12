@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
+import mobappdev.example.sensorapplication.ui.MainActivity
 import java.util.UUID
 
 class AndroidPolarController (
@@ -238,7 +239,6 @@ class AndroidPolarController (
             .toFlowable()
             .flatMap { sensorSettings: android.util.Pair<PolarSensorSetting, PolarSensorSetting> ->
                 DialogUtility.showAllSettingsDialog(
-                    this@MainActivity,
                     sensorSettings.first.settings,
                     sensorSettings.second.settings
                 ).toFlowable()

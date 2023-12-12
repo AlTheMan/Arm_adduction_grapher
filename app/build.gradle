@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace 'mobappdev.example.sensorapplication'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "mobappdev.example.sensorapplication"
