@@ -67,7 +67,7 @@ class AndroidPolarController (
         get() = _measuring.asStateFlow()
 
     init {
-        api.setPolarFilter(false)
+        api.setPolarFilter(true)
 
         val enableSdkLogs = false
         if(enableSdkLogs) {
@@ -128,6 +128,7 @@ class AndroidPolarController (
                             _hrList.update { hrList ->
                                 hrList + sample.hr
                             }
+                            Log.d(TAG, sample.hr.toString())
                         }
                     },
                     { error: Throwable ->

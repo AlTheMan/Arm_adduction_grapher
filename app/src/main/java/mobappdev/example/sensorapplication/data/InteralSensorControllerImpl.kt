@@ -56,8 +56,28 @@ class InternalSensorControllerImpl(
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     }
 
+    private val imuSensor: Sensor? by lazy {
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
     override fun startImuStream() {
-        // Todo: implement
+        if (imuSensor == null) {
+            Log.e(LOG_TAG, "Imu sensor is not available on this device")
+            return
+        }
+        if (_streamingLinAcc.value) {
+            Log.e(LOG_TAG, "Imu sensor is already streaming")
+            return
+        }
+        sensorManager.registerListener(this, imuSensor, SensorManager.SENSOR_DELAY_UI)
+        GlobalScope.launch ( Dispatchers.Main ) {
+            _streamingLinAcc.value = true;
+            while (_streamingLinAcc.value) {
+                //_currentLinAccUI.update { _curre }
+            }
+        }
+
     }
 
     override fun stopImuStream() {
