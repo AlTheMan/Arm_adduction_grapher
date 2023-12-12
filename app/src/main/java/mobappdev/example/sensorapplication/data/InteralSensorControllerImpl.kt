@@ -79,7 +79,10 @@ class InternalSensorControllerImpl(
             while (_streamingLinAcc.value) {
                 Log.e(LOG_TAG, _currentLinAcc.toString())
                 _currentLinAccUI.update { _currentLinAcc }
-                delay(500)
+                if (_currentLinAcc != null) {
+                    Log.d(LOG_TAG, CalculationModel.getLinAccAngle(_currentLinAcc!!).toString())
+                }
+                delay(1000)
             }
         }
 
@@ -135,7 +138,7 @@ class InternalSensorControllerImpl(
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
             // Extract gyro data (angular speed around X, Y, and Z axes
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
-            _currentLinAcc = null;
+
         }
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
