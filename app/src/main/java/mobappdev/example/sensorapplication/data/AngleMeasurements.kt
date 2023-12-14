@@ -4,7 +4,7 @@ data class AngleMeasurements(
     var list: MutableList<measurment> = mutableListOf()
 ){
     data class measurment(
-        val angle: Float = 0f,
-        val timestamp: Long =0
+        var angle: Float = 0f,
+        var timestamp: Long =0
     )
 }

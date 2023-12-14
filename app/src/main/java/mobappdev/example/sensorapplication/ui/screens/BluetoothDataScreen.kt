@@ -110,11 +110,12 @@ fun BluetoothDataScreen(
                 .padding(32.dp)
         ) {
             Text(
-                text = if(state.measuring) value else "-",
+                //text = if(state.measuring) value else "-",
+                text="-",
                 fontSize = if (value.length < 3) 128.sp else 54.sp,
                 color = Color.Black,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             ExternalSensorScreen(vm = vm, modifier =Modifier )
 
         }

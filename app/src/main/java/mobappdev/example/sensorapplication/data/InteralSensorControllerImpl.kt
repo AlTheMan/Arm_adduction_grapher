@@ -33,8 +33,13 @@ class InternalSensorControllerImpl @Inject constructor(
     private val calculationModel: CalculationModel,
 ): InternalSensorController, SensorEventListener {
 
-    override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
-    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+    //override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
+    //override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+    private val _angleMeasurementCurrent = MutableStateFlow<AngleMeasurements.measurment?>(null)
+    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+        get() = _angleMeasurementCurrent.asStateFlow()
+
+
 
     // Expose acceleration to the UI
     private val _currentLinAccUI = MutableStateFlow<Triple<Float, Float, Float>?>(null)
@@ -147,6 +152,7 @@ class InternalSensorControllerImpl @Inject constructor(
             if (_currentLinAcc != null) {
                 var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(_currentLinAcc!!, event.timestamp)
                 Log.d(LOG_TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
+                _angleMeasurementCurrent.value=angleMeasurements
             }
         }
     }

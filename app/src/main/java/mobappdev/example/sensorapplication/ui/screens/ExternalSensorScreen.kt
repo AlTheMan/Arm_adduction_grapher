@@ -20,16 +20,16 @@ fun ExternalSensorScreen ( vm: DataVM, modifier:Modifier){
     val deviceList by vm.deviceList.collectAsState()
     val angle by vm.angleCurrentExternal.collectAsState()
 
-        Box(
-            contentAlignment = Alignment.Center,
-            //modifier = Modifier.weight(1f)
-        ){
-            Text(
-                text = if(state.measuring) angle.angle.toString() else "-",
-                fontSize = 54.sp,
-                color = Color.Black,
-            )
-        }
+    Box(
+        contentAlignment = Alignment.Center,
+        //modifier = Modifier.weight(1f)
+    ){
+        Text(
+            text = if(state.measuring) String.format("%.1f", angle?.angle?: 7f) else "-",
+            fontSize = 54.sp,
+            color = Color.Black,
+        )
+    }
 
 
 

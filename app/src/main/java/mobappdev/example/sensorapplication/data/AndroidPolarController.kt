@@ -82,8 +82,12 @@ class AndroidPolarController (
 
 
 
-    override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
-    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+    //override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
+    //override val angleMeasurementCurrent2: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+
+    private val _angleMeasurementCurrent = MutableStateFlow<AngleMeasurements.measurment?>(null)
+    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+        get() = _angleMeasurementCurrent.asStateFlow()
 
 
 
@@ -269,6 +273,11 @@ class AndroidPolarController (
                             var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(Triple(data.x.toFloat(),data.y.toFloat(),data.z.toFloat()), data.timeStamp)
                             Log.d(TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
                             //TODO: add to list
+
+                            _angleMeasurementCurrent.value = angleMeasurements
+                            Log.d(TAG, "_angleMeasurementCurrent angle: " + _angleMeasurementCurrent.value?.angle.toString() + ", timestamp:" + _angleMeasurementCurrent.value?.timestamp.toString())
+                            Log.d(TAG, "angleMeasurementCurrent angle: " + angleMeasurementCurrent.value?.angle.toString() + ", timestamp:" + angleMeasurementCurrent.value?.timestamp.toString())
+
                             Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                         }
                     },
