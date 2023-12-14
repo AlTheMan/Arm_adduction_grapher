@@ -22,12 +22,21 @@ import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.PolarController
 import java.util.UUID
 
@@ -52,6 +61,7 @@ class AndroidPolarController (
         )
     }
 
+    private var scanDisposable: Disposable? = null
     private var hrDisposable: Disposable? = null
     private var accDisposable: Disposable? = null
     private var gyrDisposable: Disposable? = null
@@ -60,6 +70,10 @@ class AndroidPolarController (
     private val _hrCurrent = MutableStateFlow<Int?>(null)
     override val hrCurrent: StateFlow<Int?>
         get() = _hrCurrent.asStateFlow()
+
+    private val _devicesFlow = MutableSharedFlow<PolarDeviceInfo>()
+    override val devicesFlow: Flow<PolarDeviceInfo> = _devicesFlow.asSharedFlow()
+
 
     private val _hrList = MutableStateFlow<List<Int>>(emptyList())
     override val hrList: StateFlow<List<Int>>
@@ -93,8 +107,7 @@ class AndroidPolarController (
         get() = _measuring.asStateFlow()
 
     init {
-        api.setPolarFilter(true)
-
+        api.setPolarFilter(false)
         val enableSdkLogs = false
         if(enableSdkLogs) {
             api.setApiLogger { s: String -> Log.d("Polar API Logger", s) }
@@ -165,6 +178,37 @@ class AndroidPolarController (
         } else {
             Log.d(TAG, "Already streaming")
         }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun searchBTDevices() {
+        Log.d(TAG, "Searching")
+        val isDisposed = scanDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            //toggleButtonDown(scanButton, R.string.scanning_devices)
+            scanDisposable = api.searchForDevice()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { polarDeviceInfo: PolarDeviceInfo ->
+                        GlobalScope.launch {
+                            _devicesFlow.emit(polarDeviceInfo)
+                        }
+                        Log.d(TAG, "polar device found id: " + polarDeviceInfo.deviceId + " address: " + polarDeviceInfo.address + " rssi: " + polarDeviceInfo.rssi + " name: " + polarDeviceInfo.name + " isConnectable: " + polarDeviceInfo.isConnectable)
+                    },
+                    { error: Throwable ->
+                        //toggleButtonUp(scanButton, "Scan devices")
+                        Log.e(TAG, "Device scan failed. Reason $error")
+                    },
+                    {
+                        //toggleButtonUp(scanButton, "Scan devices")
+                        Log.d(TAG, "complete")
+                    }
+                )
+        } else {
+            //toggleButtonUp(scanButton, "Scan devices")
+            scanDisposable?.dispose()
+        }
+
 
     }
 
@@ -255,9 +299,6 @@ class AndroidPolarController (
         gyrDisposable?.dispose()
         _gyrCurrent.update { null }
     }
-
-
-
 
     private fun requestStreamSettings(identifier: String, feature: PolarBleApi.PolarDeviceDataType): Flowable<PolarSensorSetting> {
         val availableSettings = api.requestStreamSettings(identifier, feature)

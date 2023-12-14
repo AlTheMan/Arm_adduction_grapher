@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -40,6 +43,7 @@ fun BluetoothDataScreen(
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
+    val deviceList by vm.deviceList.collectAsState()
 
     val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
         is CombinedSensorData.GyroData -> {
@@ -70,6 +74,15 @@ fun BluetoothDataScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
+        
+        Text(text = "TOP")
+        LazyColumn() {
+            items(deviceList) {
+                it -> Text(text = it.name)
+            }
+        }
+
+
         Text(text = if (state.connected) "connected" else "disconnected")
         Box(
             contentAlignment = Center,
@@ -89,6 +102,15 @@ fun BluetoothDataScreen(
             Button(
                 onClick = vm::connectToSensor,
                 enabled = !state.connected,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Connect\n${deviceId}")
+            }
+            Button(
+                onClick = vm::searchBTDevices,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray

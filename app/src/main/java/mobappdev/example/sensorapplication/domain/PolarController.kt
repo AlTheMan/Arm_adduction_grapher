@@ -10,12 +10,18 @@ package mobappdev.example.sensorapplication.domain
 
 
 import com.polar.sdk.api.model.PolarAccelerometerData
+
 import com.polar.sdk.api.model.PolarGyroData
+
+import com.polar.sdk.api.model.PolarDeviceInfo
+import kotlinx.coroutines.flow.Flow
+
 import kotlinx.coroutines.flow.StateFlow
 
 interface PolarController {
     val hrCurrent: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
+    val devicesFlow: Flow<PolarDeviceInfo>
 
     val accList: StateFlow<PolarAccelerometerData?>
     val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
@@ -32,7 +38,11 @@ interface PolarController {
     fun startHrStreaming(deviceId: String) //start streaming heart-rate measurements
     fun stopHrStreaming()
 
-    fun startAccStream(deviceId: String) //start streaming acceleration measurements
+
+    fun searchBTDevices()
+
+    fun startAccStream(deviceId: String)
+
     fun stopAccStreaming()
 
     fun startGyroStream(deviceId: String) //start streaming gyroscope measurements
