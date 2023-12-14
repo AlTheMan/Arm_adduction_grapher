@@ -230,6 +230,12 @@ class AndroidPolarController (
                     .subscribe(
                         { polarGyroData: PolarGyroData ->
                             for (data in polarGyroData.samples) {
+                                _gyrCurrent.update { data }
+                                //Log.d(TAG, "ACC in currentAcc: " +currentAcc.value)
+                                _gyrList.update { currentData ->
+                                    val newSamples = currentData?.samples.orEmpty() + data
+                                    PolarGyroData(newSamples, data.timeStamp)
+                                }
                                 Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                             }
                         },

@@ -134,7 +134,7 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nGyro Stream")
             }
             Button(
-                onClick = vm::startAcc,
+                onClick = vm::startExtAcc,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -161,6 +161,16 @@ fun BluetoothDataScreen(
                 )
             ) {
                 Text(text = "Start\nImu Stream")
+            }
+            Button(
+                onClick = vm::startExtGyro,
+                enabled = (!state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\next Gyro")
             }
             Button(
                 onClick = vm::stopDataStream,

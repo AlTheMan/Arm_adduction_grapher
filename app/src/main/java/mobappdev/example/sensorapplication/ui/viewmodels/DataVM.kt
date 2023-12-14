@@ -12,6 +12,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.polar.sdk.api.model.PolarAccelerometerData
+import com.polar.sdk.api.model.PolarGyroData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,14 +36,16 @@ class DataVM @Inject constructor(
     private val linAccDataFlow = internalSensorController.currentLinAccUI
     private val hrDataFlow = polarController.hrCurrent
     private val externalLinAccDataFlow = polarController.accCurrent
+    private val externalGyroDataFlow = polarController.gyrCurrent
 
     // Combine the two data flows
     val combinedDataFlow= combine(
         gyroDataFlow,
         hrDataFlow,
         linAccDataFlow,
-        externalLinAccDataFlow
-    ) { gyro, hr, linAcc, externalLinAcc ->
+        externalLinAccDataFlow,
+        externalGyroDataFlow
+    ) { gyro, hr, linAcc, externalLinAcc, externalGyro ->
         if (hr != null ) {
             CombinedSensorData.HrData(hr)
         } else if (gyro != null) {
@@ -51,7 +54,10 @@ class DataVM @Inject constructor(
             CombinedSensorData.LinAccData(linAcc)
         } else if(externalLinAcc!=null){
             CombinedSensorData.externalLinAccData(externalLinAcc)
-        } else
+        }else if(externalGyro!=null){
+            CombinedSensorData.externalGyroData(externalGyro)
+        }
+        else
         {
             null
         }
@@ -96,9 +102,15 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
-    fun startAcc() {
+    fun startExtAcc() {
         polarController.startAccStream(_deviceId.value)
         streamType = StreamType.FOREIGN_ACC
+        _state.update { it.copy(measuring = true) }
+    }
+
+    fun startExtGyro() {
+        polarController.startGyroStream(_deviceId.value)
+        streamType = StreamType.FOREIGN_GYRO
         _state.update { it.copy(measuring = true) }
     }
 
@@ -121,6 +133,7 @@ class DataVM @Inject constructor(
             StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
+            StreamType.FOREIGN_GYRO -> polarController.stopGyroStreaming()
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
@@ -134,7 +147,7 @@ data class DataUiState(
 )
 
 enum class StreamType {
-    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC
+    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC, FOREIGN_GYRO
 }
 
 sealed class CombinedSensorData {
@@ -142,4 +155,5 @@ sealed class CombinedSensorData {
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class LinAccData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class externalLinAccData(val extLinAcc: PolarAccelerometerData.PolarAccelerometerDataSample?) : CombinedSensorData()
+    data class externalGyroData(val extGyro: PolarGyroData.PolarGyroDataSample?) : CombinedSensorData()
 }
