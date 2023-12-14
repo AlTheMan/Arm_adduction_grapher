@@ -33,6 +33,9 @@ class InternalSensorControllerImpl @Inject constructor(
     private val calculationModel: CalculationModel,
 ): InternalSensorController, SensorEventListener {
 
+    override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
+    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+
     // Expose acceleration to the UI
     private val _currentLinAccUI = MutableStateFlow<Triple<Float, Float, Float>?>(null)
     override val currentLinAccUI: StateFlow<Triple<Float, Float, Float>?>

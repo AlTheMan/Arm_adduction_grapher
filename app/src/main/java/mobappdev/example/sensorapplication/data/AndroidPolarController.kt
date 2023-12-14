@@ -72,6 +72,12 @@ class AndroidPolarController (
     override val hrCurrent: StateFlow<Int?>
         get() = _hrCurrent.asStateFlow()
 
+
+    override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
+    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
+
+
+
     private val _devicesFlow = MutableSharedFlow<PolarDeviceInfo>()
     override val devicesFlow: Flow<PolarDeviceInfo> = _devicesFlow.asSharedFlow()
 

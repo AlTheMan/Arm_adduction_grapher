@@ -1,5 +1,8 @@
 package mobappdev.example.sensorapplication.data
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -14,12 +17,25 @@ class CalculationModel {
     //private var angleMeasurements: MutableList<Pair<Float, Long>> = mutableListOf()
     private var angleMeasurments = AngleMeasurements()
 
+    private val _angleMeasurementsFlow = MutableStateFlow(angleMeasurments)
+    val angleMeasurementsFlow: StateFlow<AngleMeasurements>
+        get() = _angleMeasurementsFlow.asStateFlow()
+
+    //private val _angleMeasurementLastFlow= MutableStateFlow(angleMeasurments.list.last())
+    //val angleMeasurementLastFlow: StateFlow<AngleMeasurements.measurment>
+     //   get() = _angleMeasurementLastFlow.asStateFlow()
+
+    private val _angleMeasurementLastFlow = MutableStateFlow(
+        _angleMeasurementsFlow.value.list.lastOrNull() ?: AngleMeasurements.measurment(0f, 0L)
+    )
+    val angleMeasurementLastFlow: StateFlow<AngleMeasurements.measurment>
+        get() = _angleMeasurementLastFlow.asStateFlow()
+
 
     fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>, timestamp: Long): AngleMeasurements.measurment {
         val pitch = getPitchAngle(axes)
         val angle = radiansToDegrees(linearAccelerationFilter(pitch, timestamp))
         return AngleMeasurements.measurment(angle, timestamp)
-
     }
 
     /** Rotate x-direction */

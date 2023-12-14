@@ -17,11 +17,14 @@ import com.polar.sdk.api.model.PolarDeviceInfo
 import kotlinx.coroutines.flow.Flow
 
 import kotlinx.coroutines.flow.StateFlow
+import mobappdev.example.sensorapplication.data.AngleMeasurements
 
 interface PolarController {
     val hrCurrent: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
     val devicesFlow: Flow<PolarDeviceInfo>
+    val angleMeasurements: StateFlow<AngleMeasurements>
+    val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment>
 
     val accList: StateFlow<PolarAccelerometerData?>
     val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>

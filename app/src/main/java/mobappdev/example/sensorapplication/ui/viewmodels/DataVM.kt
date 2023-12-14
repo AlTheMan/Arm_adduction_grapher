@@ -40,6 +40,9 @@ class DataVM @Inject constructor(
     private val hrDataFlow = polarController.hrCurrent
     private val externalLinAccDataFlow = polarController.accCurrent
     private val externalGyroDataFlow = polarController.gyrCurrent
+    public val angleCurrentExternal = polarController.angleMeasurementCurrent
+    public val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
+
 
     private val _deviceList = MutableStateFlow<MutableList<PolarDeviceInfo>>(mutableListOf())
     val deviceList: StateFlow<List<PolarDeviceInfo>> = _deviceList;

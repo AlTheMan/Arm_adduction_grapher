@@ -82,6 +82,7 @@ fun BluetoothDataScreen(
         else -> "-"
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -89,7 +90,7 @@ fun BluetoothDataScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        
+
         Text(text = "TOP")
         LazyColumn() {
             items(deviceList) {
@@ -99,15 +100,21 @@ fun BluetoothDataScreen(
 
 
         Text(text = if (state.connected) "connected" else "disconnected")
+
+
         Box(
             contentAlignment = Center,
             modifier = Modifier.weight(1f)
+                .padding(32.dp)
         ) {
             Text(
                 text = if(state.measuring) value else "-",
                 fontSize = if (value.length < 3) 128.sp else 54.sp,
                 color = Color.Black,
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            ExternalSensorScreen(vm = vm, modifier =Modifier )
+
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
