@@ -19,6 +19,8 @@ interface InternalSensorController {
     //val angleMeasurements: StateFlow<AngleMeasurements>
     //val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment>
     val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+    val angleMeasurements: StateFlow<AngleMeasurements?>
+
 
 
     fun startImuStream()

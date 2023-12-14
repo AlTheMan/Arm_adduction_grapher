@@ -39,6 +39,9 @@ class InternalSensorControllerImpl @Inject constructor(
     override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
         get() = _angleMeasurementCurrent.asStateFlow()
 
+    private val _angleMeasurements = MutableStateFlow<AngleMeasurements?>(null)
+    override val angleMeasurements: StateFlow<AngleMeasurements?>
+        get() = _angleMeasurements.asStateFlow()
 
 
     // Expose acceleration to the UI
@@ -152,9 +155,21 @@ class InternalSensorControllerImpl @Inject constructor(
             if (_currentLinAcc != null) {
                 var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(_currentLinAcc!!, event.timestamp)
                 Log.d(LOG_TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
-                _angleMeasurementCurrent.value=angleMeasurements
+                updateAngleValues(angleMeasurements)
             }
         }
+    }
+
+    private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment){
+        _angleMeasurementCurrent.value = angleMeasurements
+
+        // Create a new mutable list from the existing list and add the new measurement
+        val updatedList = _angleMeasurements.value?.list?.toMutableList() ?: mutableListOf()
+        updatedList.add(angleMeasurements)
+        val updatedAngleMeasurements = AngleMeasurements(updatedList)
+        // Update _angleMeasurements with the new object
+        _angleMeasurements.value = updatedAngleMeasurements
+
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {

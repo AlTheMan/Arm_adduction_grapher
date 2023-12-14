@@ -290,7 +290,7 @@ class AndroidPolarController (
             Log.d(TAG, "ACC Already streaming")
         }
     }
-    
+
     private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment){
         _angleMeasurementCurrent.value = angleMeasurements
 
