@@ -43,7 +43,7 @@ interface PolarController {
     fun stopHrStreaming()
 
 
-    suspend fun searchBTDevices()
+    suspend fun searchBTDevices(): Boolean
 
     fun startAccStream(deviceId: String)
 

@@ -20,38 +20,29 @@ import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarGyroData
 import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
-import dagger.hilt.android.scopes.ViewModelScoped
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mobappdev.example.sensorapplication.domain.PolarController
 import java.util.UUID
 
-class AndroidPolarController (
+private const val TAG = "AndroidPolarController"
+
+class AndroidPolarController(
     private val context: Context,
     private val calculationModel: CalculationModel
-): PolarController {
+) : PolarController {
 
     private val api: PolarBleApi by lazy {
         // Notice all features are enabled
@@ -74,12 +65,11 @@ class AndroidPolarController (
     private var hrDisposable: Disposable? = null
     private var accDisposable: Disposable? = null
     private var gyrDisposable: Disposable? = null
-    private val TAG = "AndroidPolarController"
+
 
     private val _hrCurrent = MutableStateFlow<Int?>(null)
     override val hrCurrent: StateFlow<Int?>
         get() = _hrCurrent.asStateFlow()
-
 
 
     //override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
@@ -92,8 +82,6 @@ class AndroidPolarController (
     private val _angleMeasurements = MutableStateFlow<AngleMeasurements?>(null)
     override val angleMeasurements: StateFlow<AngleMeasurements?>
         get() = _angleMeasurements.asStateFlow()
-
-
 
     private val _devicesFlow = MutableSharedFlow<PolarDeviceInfo>()
     override val devicesFlow: Flow<PolarDeviceInfo> = _devicesFlow.asSharedFlow()
@@ -112,7 +100,8 @@ class AndroidPolarController (
     override val accList: StateFlow<PolarAccelerometerData?>
         get() = _accList.asStateFlow()
 
-    private val _accCurrent = MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
+    private val _accCurrent =
+        MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
     override val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
         get() = _accCurrent.asStateFlow()
 
@@ -137,11 +126,11 @@ class AndroidPolarController (
     init {
         api.setPolarFilter(true)
         val enableSdkLogs = false
-        if(enableSdkLogs) {
+        if (enableSdkLogs) {
             api.setApiLogger { s: String -> Log.d("Polar API Logger", s) }
         }
 
-        api.setApiCallback(object: PolarBleApiCallback() {
+        api.setApiCallback(object : PolarBleApiCallback() {
             override fun batteryLevelReceived(identifier: String, level: Int) {
                 Log.d(TAG, "BATTERY LEVEL: $level")
             }
@@ -184,7 +173,7 @@ class AndroidPolarController (
 
     override fun startHrStreaming(deviceId: String) {
         val isDisposed = hrDisposable?.isDisposed ?: true
-        if(isDisposed) {
+        if (isDisposed) {
             _measuring.update { true }
             hrDisposable = api.startHrStreaming(deviceId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -201,16 +190,14 @@ class AndroidPolarController (
                     { error: Throwable ->
                         Log.e(TAG, "Hr stream failed.\nReason $error")
                     },
-                    { Log.d(TAG, "Hr stream complete")}
+                    { Log.d(TAG, "Hr stream complete") }
                 )
         } else {
             Log.d(TAG, "Already streaming")
         }
     }
 
-
-    @OptIn(DelicateCoroutinesApi::class)
-    override suspend fun searchBTDevices() {
+    override suspend fun searchBTDevices(): Boolean {
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         val isDisposed = scanDisposable?.isDisposed ?: true
         if (isDisposed) {
@@ -221,6 +208,7 @@ class AndroidPolarController (
                 .subscribe(
                     { polarDeviceInfo: PolarDeviceInfo ->
                         coroutineScope.launch {
+                            Log.d(TAG, "Searching2")
                             _foundDevices.emit(polarDeviceInfo).also {
                                 Log.d(TAG, "Emitting device: ${polarDeviceInfo.deviceId}")
                             }
@@ -235,12 +223,15 @@ class AndroidPolarController (
                         Log.d(TAG, "complete")
                     }
                 )
+            Log.d(TAG, "Searching3")
         } else {
             //toggleButtonUp(scanButton, "Scan devices")
             Log.d(TAG, "Disposing")
             scanDisposable?.dispose()
             Log.d(TAG, "scanDisposable is disposed: " + scanDisposable?.isDisposed.toString())
+            return false
         }
+        return true
     }
 
 
@@ -257,7 +248,7 @@ class AndroidPolarController (
         _hrCurrent.update { null }
     }
 
-    override fun startAccStream(deviceId: String){
+    override fun startAccStream(deviceId: String) {
         val isDisposed = accDisposable?.isDisposed ?: true
         if (isDisposed) {
             accDisposable = requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.ACC)
@@ -268,10 +259,23 @@ class AndroidPolarController (
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
-                            var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(Triple(data.x.toFloat(),data.y.toFloat(),data.z.toFloat()), data.timeStamp)
+                            val angleMeasurements: AngleMeasurements.measurment =
+                                calculationModel.getLinearAccelerationAngle(
+                                    Triple(
+                                        data.x.toFloat(),
+                                        data.y.toFloat(),
+                                        data.z.toFloat()
+                                    ), data.timeStamp
+                                )
                             updateAngleValues(angleMeasurements)
-                            Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
-                            Log.d(TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
+                            Log.d(
+                                TAG,
+                                "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
+                            )
+                            Log.d(
+                                TAG,
+                                "angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString()
+                            )
                         }
                     },
                     { error: Throwable ->
@@ -291,7 +295,7 @@ class AndroidPolarController (
         }
     }
 
-    private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment){
+    private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment) {
         _angleMeasurementCurrent.value = angleMeasurements
 
         // Create a new mutable list from the existing list and add the new measurement
@@ -309,7 +313,7 @@ class AndroidPolarController (
         _accCurrent.update { null }
     }
 
-    override fun startGyroStream(deviceId: String){
+    override fun startGyroStream(deviceId: String) {
         val isDisposed = gyrDisposable?.isDisposed ?: true
         if (isDisposed) {
             gyrDisposable =
@@ -322,12 +326,21 @@ class AndroidPolarController (
                         { polarGyroData: PolarGyroData ->
                             for (data in polarGyroData.samples) {
                                 _gyrCurrent.update { data }
-                                Log.d(TAG, "ACC degrees: " + calculationModel.getLinearAccelerationAngle(Triple(data.x,data.y,data.z),data.timeStamp).toString() )
+                                Log.d(
+                                    TAG,
+                                    "ACC degrees: " + calculationModel.getLinearAccelerationAngle(
+                                        Triple(data.x, data.y, data.z),
+                                        data.timeStamp
+                                    ).toString()
+                                )
                                 _gyrList.update { currentData ->
                                     val newSamples = currentData?.samples.orEmpty() + data
                                     PolarGyroData(newSamples, data.timeStamp)
                                 }
-                                Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                                Log.d(
+                                    TAG,
+                                    "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
+                                )
                             }
                         },
                         { error: Throwable ->
@@ -347,14 +360,23 @@ class AndroidPolarController (
         _gyrCurrent.update { null }
     }
 
-    private fun requestStreamSettings(identifier: String, feature: PolarBleApi.PolarDeviceDataType): Flowable<PolarSensorSetting> {
+    private fun requestStreamSettings(
+        identifier: String,
+        feature: PolarBleApi.PolarDeviceDataType
+    ): Flowable<PolarSensorSetting> {
         val availableSettings = api.requestStreamSettings(identifier, feature)
         val allSettings = api.requestFullStreamSettings(identifier, feature)
             .onErrorReturn { error: Throwable ->
-                Log.w(TAG, "Full stream settings are not available for feature $feature. REASON: $error")
+                Log.w(
+                    TAG,
+                    "Full stream settings are not available for feature $feature. REASON: $error"
+                )
                 PolarSensorSetting(emptyMap())
             }
-        return Single.zip(availableSettings, allSettings) { available: PolarSensorSetting, all: PolarSensorSetting ->
+        return Single.zip(
+            availableSettings,
+            allSettings
+        ) { available: PolarSensorSetting, all: PolarSensorSetting ->
             if (available.settings.isEmpty()) {
                 throw Throwable("Settings are not available")
             } else {

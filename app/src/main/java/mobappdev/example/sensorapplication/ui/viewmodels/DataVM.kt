@@ -16,6 +16,7 @@ import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarGyroData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,8 +46,10 @@ class DataVM @Inject constructor(
     public val angleCurrentExternal = polarController.angleMeasurementCurrent
     public val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
 
+    private var isSearching: Boolean = false;
 
-    private val _deviceList = MutableStateFlow<MutableList<PolarDeviceInfo>>(mutableListOf())
+
+    private val _deviceList = MutableStateFlow<List<PolarDeviceInfo>>(listOf())
     val deviceList: StateFlow<List<PolarDeviceInfo>>
         get() = _deviceList.asStateFlow()
 
@@ -103,8 +106,13 @@ class DataVM @Inject constructor(
 
     // In view model
     fun searchBTDevices() {
+
         viewModelScope.launch {
-            polarController.searchBTDevices()
+            if (!isSearching){
+                _deviceList.value = emptyList()
+            }
+            isSearching = polarController.searchBTDevices()
+            Log.d(LOG_TAG, "IsSearching: $isSearching")
         }
 
     }
@@ -161,13 +169,11 @@ class DataVM @Inject constructor(
     init {
         viewModelScope.launch {
             polarController.foundDevices
-                .distinctUntilChangedBy { it.deviceId }
                 .collect {
                     if(!deviceInList(it)){
                         _deviceList.value = (_deviceList.value + it).toMutableList()
                     }
                 }
-            Log.d(LOG_TAG, "Done")
         }
     }
 
