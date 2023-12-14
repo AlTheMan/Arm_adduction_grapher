@@ -7,13 +7,19 @@ import kotlin.math.sqrt
 private const val TAG = "CalculationModel"
 private const val alpha = 0.95F //TODO: Ändra från ui?
 
+
 class CalculationModel {
 
-    private var angleMeasurements: MutableList<Float> = mutableListOf()
+    //private var angleMeasurements2: MutableList<Float> = mutableListOf()
+    //private var angleMeasurements: MutableList<Pair<Float, Long>> = mutableListOf()
+    private var angleMeasurments = AngleMeasurements()
 
-    fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>): Float {
+
+    fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>, timestamp: Long): AngleMeasurements.measurment {
         val pitch = getPitchAngle(axes)
-        return radiansToDegrees(linearAccelerationFilter(pitch))
+        val angle = radiansToDegrees(linearAccelerationFilter(pitch, timestamp))
+        return AngleMeasurements.measurment(angle, timestamp)
+
     }
 
     /** Rotate x-direction */
@@ -34,12 +40,16 @@ class CalculationModel {
         return alpha * linAccAngle + (1 - alpha) * gyroAngle
     }
 
-    private fun linearAccelerationFilter(value: Float): Float {
-        if (angleMeasurements.isEmpty()) {
-            angleMeasurements.add(value)
+    private fun linearAccelerationFilter(value: Float, timestamp: Long): Float {
+        if (angleMeasurments.list.isEmpty()) {
+            angleMeasurments.list.add(AngleMeasurements.measurment(value, timestamp))
             return value
         }
-        return (alpha * value) + (1 - alpha) * angleMeasurements.last()
+        val lastAngle = angleMeasurments.list.last().angle
+        val filteredValue = alpha * value + (1 - alpha) * lastAngle
+        angleMeasurments.list.add(AngleMeasurements.measurment(filteredValue, timestamp))
+
+        return filteredValue
     }
 
     private fun distance(a: Float, b: Float): Float {

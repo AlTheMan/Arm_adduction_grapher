@@ -34,8 +34,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providePolarController(@ApplicationContext context: Context): PolarController {
-        return AndroidPolarController(context)
+    fun providePolarController(@ApplicationContext context: Context, calculationModel: CalculationModel): PolarController {
+        return AndroidPolarController(context, calculationModel)
     }
 
     @Provides

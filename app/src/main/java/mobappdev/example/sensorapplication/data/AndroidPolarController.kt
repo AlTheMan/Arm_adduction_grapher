@@ -42,6 +42,7 @@ import java.util.UUID
 
 class AndroidPolarController (
     private val context: Context,
+    private val calculationModel: CalculationModel
 ): PolarController {
 
     private val api: PolarBleApi by lazy {
@@ -275,7 +276,7 @@ class AndroidPolarController (
                         { polarGyroData: PolarGyroData ->
                             for (data in polarGyroData.samples) {
                                 _gyrCurrent.update { data }
-                                //Log.d(TAG, "ACC in currentAcc: " +currentAcc.value)
+                                Log.d(TAG, "ACC degrees: " + calculationModel.getLinearAccelerationAngle(Triple(data.x,data.y,data.z),data.timeStamp).toString() )
                                 _gyrList.update { currentData ->
                                     val newSamples = currentData?.samples.orEmpty() + data
                                     PolarGyroData(newSamples, data.timeStamp)

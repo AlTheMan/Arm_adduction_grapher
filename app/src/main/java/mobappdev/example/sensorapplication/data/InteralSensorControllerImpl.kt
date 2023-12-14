@@ -3,7 +3,7 @@ package mobappdev.example.sensorapplication.data
 /**
  * File: InternalSensorControllerImpl.kt
  * Purpose: Implementation of the Internal Sensor Controller.
- * Author: Jitse van Esch
+ * Author:
  * Created: 2023-09-21
  * Last modified: 2023-09-21
  */
@@ -142,7 +142,8 @@ class InternalSensorControllerImpl @Inject constructor(
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
             if (_currentLinAcc != null) {
-                Log.d(LOG_TAG, calculationModel.getLinearAccelerationAngle(_currentLinAcc!!).toString())
+                var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(_currentLinAcc!!, event.timestamp)
+                Log.d(LOG_TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
             }
         }
     }
