@@ -236,6 +236,8 @@ class AndroidPolarController (
                                 val newSamples = currentData?.samples.orEmpty() + data
                                 PolarAccelerometerData(newSamples, data.timeStamp)
                             }
+                            var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(Triple(data.x.toFloat(),data.y.toFloat(),data.z.toFloat()), data.timeStamp)
+                            Log.d(TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
                             //TODO: add to list
                             Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                         }
