@@ -45,6 +45,8 @@ fun BluetoothDataScreen(
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
     val deviceList by vm.deviceList.collectAsState()
 
+
+
     val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
         is CombinedSensorData.GyroData -> {
             val triple = combinedSensorData.gyro
@@ -138,7 +140,7 @@ fun BluetoothDataScreen(
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Connect\n${deviceId}")
+                Text(text = "Search Devices")
             }
             Button(
                 onClick = vm::disconnectFromSensor,

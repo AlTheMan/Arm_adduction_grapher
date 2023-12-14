@@ -25,6 +25,7 @@ interface PolarController {
     val devicesFlow: Flow<PolarDeviceInfo>
     val angleMeasurements: StateFlow<AngleMeasurements>
     val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment>
+    val foundDevices: Flow<PolarDeviceInfo>
 
     val accList: StateFlow<PolarAccelerometerData?>
     val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
@@ -42,7 +43,7 @@ interface PolarController {
     fun stopHrStreaming()
 
 
-    fun searchBTDevices()
+    suspend fun searchBTDevices()
 
     fun startAccStream(deviceId: String)
 

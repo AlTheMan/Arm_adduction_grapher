@@ -13,14 +13,15 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.polar.sdk.api.model.PolarAccelerometerData
-import com.polar.sdk.api.model.PolarGyroData
 import com.polar.sdk.api.model.PolarDeviceInfo
+import com.polar.sdk.api.model.PolarGyroData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,11 +30,12 @@ import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
 
 private const val LOG_TAG = "DataVM"
+
 @HiltViewModel
 class DataVM @Inject constructor(
     private val polarController: PolarController,
     private val internalSensorController: InternalSensorController
-): ViewModel() {
+) : ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val linAccDataFlow = internalSensorController.currentLinAccUI
@@ -45,25 +47,26 @@ class DataVM @Inject constructor(
 
 
     private val _deviceList = MutableStateFlow<MutableList<PolarDeviceInfo>>(mutableListOf())
-    val deviceList: StateFlow<List<PolarDeviceInfo>> = _deviceList;
+    val deviceList: StateFlow<List<PolarDeviceInfo>>
+        get() = _deviceList.asStateFlow()
 
     // Combine the two data flows
-    val combinedDataFlow= combine(
+    val combinedDataFlow = combine(
         gyroDataFlow,
         hrDataFlow,
         linAccDataFlow,
         externalLinAccDataFlow,
         externalGyroDataFlow
     ) { gyro, hr, linAcc, externalLinAcc, externalGyro ->
-        if (hr != null ) {
+        if (hr != null) {
             CombinedSensorData.HrData(hr)
         } else if (gyro != null) {
             CombinedSensorData.GyroData(gyro)
-        } else if (linAcc != null){
+        } else if (linAcc != null) {
             CombinedSensorData.LinAccData(linAcc)
-        } else if(externalLinAcc!=null){
+        } else if (externalLinAcc != null) {
             CombinedSensorData.ExternalLinAccData(externalLinAcc)
-        } else if(externalGyro!=null){
+        } else if (externalGyro != null) {
             CombinedSensorData.ExternalGyroData(externalGyro)
         } else {
             null
@@ -98,17 +101,12 @@ class DataVM @Inject constructor(
         polarController.connectToDevice(_deviceId.value)
     }
 
+    // In view model
     fun searchBTDevices() {
-        polarController.searchBTDevices()
         viewModelScope.launch {
-            polarController.devicesFlow.collect { newDevice ->
-                val updatedList = _deviceList.value.toMutableList().apply {
-                    add(newDevice)
-                }
-                _deviceList.value = updatedList
-                Log.d(LOG_TAG, newDevice.name) // This prints the correct name
-            }
+            polarController.searchBTDevices()
         }
+
     }
 
 
@@ -148,7 +146,7 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
-    fun stopDataStream(){
+    fun stopDataStream() {
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
@@ -158,6 +156,29 @@ class DataVM @Inject constructor(
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
+    }
+
+    init {
+        viewModelScope.launch {
+            polarController.foundDevices
+                .distinctUntilChangedBy { it.deviceId }
+                .collect {
+                    if(!deviceInList(it)){
+                        _deviceList.value = (_deviceList.value + it).toMutableList()
+                    }
+                }
+            Log.d(LOG_TAG, "Done")
+        }
+    }
+
+
+    private fun deviceInList(polarDeviceInfo: PolarDeviceInfo) : Boolean {
+        for (element in _deviceList.value) {
+            if (polarDeviceInfo.deviceId == element.deviceId) {
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -175,7 +196,10 @@ sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class LinAccData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()
-    data class ExternalLinAccData(val extLinAcc: PolarAccelerometerData.PolarAccelerometerDataSample?) : CombinedSensorData()
-    data class ExternalGyroData(val extGyro: PolarGyroData.PolarGyroDataSample?) : CombinedSensorData()
+    data class ExternalLinAccData(val extLinAcc: PolarAccelerometerData.PolarAccelerometerDataSample?) :
+        CombinedSensorData()
+
+    data class ExternalGyroData(val extGyro: PolarGyroData.PolarGyroDataSample?) :
+        CombinedSensorData()
 
 }
