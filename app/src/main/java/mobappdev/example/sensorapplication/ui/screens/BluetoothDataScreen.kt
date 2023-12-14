@@ -123,25 +123,26 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Start\nHr Stream")
             }
-            Button(
-                onClick = vm::startGyro,
-                enabled = (!state.measuring),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Start\nGyro Stream")
-            }
+
             Button(
                 onClick = vm::startExtAcc,
-                enabled = (!state.measuring),
+                enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\next acc stream")
+                Text(text = "Start\next acc")
+            }
+            Button(
+                onClick = vm::startExtGyro,
+                enabled = (state.connected && !state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\next Gyro")
             }
 
 
@@ -163,14 +164,14 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nImu Stream")
             }
             Button(
-                onClick = vm::startExtGyro,
+                onClick = vm::startGyro,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\next Gyro")
+                Text(text = "Start\nGyro Stream")
             }
             Button(
                 onClick = vm::stopDataStream,
