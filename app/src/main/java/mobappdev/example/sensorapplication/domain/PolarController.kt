@@ -10,14 +10,18 @@ package mobappdev.example.sensorapplication.domain
 
 
 import com.polar.sdk.api.model.PolarAccelerometerData
+import com.polar.sdk.api.model.PolarGyroData
 import kotlinx.coroutines.flow.StateFlow
 
 interface PolarController {
-    val currentHR: StateFlow<Int?>
+    val hrCurrent: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
 
     val accList: StateFlow<PolarAccelerometerData?>
-    val currentAcc: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
+    val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
+
+    val gyrList: StateFlow<PolarGyroData?>
+    val gyrCurrent: StateFlow<PolarGyroData.PolarGyroDataSample?>
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
@@ -25,10 +29,13 @@ interface PolarController {
     fun connectToDevice(deviceId: String)
     fun disconnectFromDevice(deviceId: String)
 
-    fun startHrStreaming(deviceId: String)
+    fun startHrStreaming(deviceId: String) //start streaming heart-rate measurements
     fun stopHrStreaming()
 
-    fun startAccStream(deviceId: String)
+    fun startAccStream(deviceId: String) //start streaming acceleration measurements
     fun stopAccStreaming()
+
+    fun startGyroStream(deviceId: String) //start streaming gyroscope measurements
+    fun stopGyroStreaming()
 
     }

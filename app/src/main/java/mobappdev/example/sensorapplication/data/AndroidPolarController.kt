@@ -4,7 +4,7 @@ package mobappdev.example.sensorapplication.data
  * File: AndroidPolarController.kt
  * Purpose: Implementation of the PolarController Interface.
  *          Communicates with the polar API
- * Author: Jitse van Esch
+ * Author:
  * Created: 2023-07-08
  * Last modified: 2023-07-11
  */
@@ -17,6 +17,7 @@ import com.polar.sdk.api.PolarBleApiDefaultImpl
 import com.polar.sdk.api.errors.PolarInvalidArgument
 import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
+import com.polar.sdk.api.model.PolarGyroData
 import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -28,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
-import mobappdev.example.sensorapplication.ui.MainActivity
 import java.util.UUID
 
 class AndroidPolarController (
@@ -57,9 +57,9 @@ class AndroidPolarController (
     private var gyrDisposable: Disposable? = null
     private val TAG = "AndroidPolarController"
 
-    private val _currentHR = MutableStateFlow<Int?>(null)
-    override val currentHR: StateFlow<Int?>
-        get() = _currentHR.asStateFlow()
+    private val _hrCurrent = MutableStateFlow<Int?>(null)
+    override val hrCurrent: StateFlow<Int?>
+        get() = _hrCurrent.asStateFlow()
 
     private val _hrList = MutableStateFlow<List<Int>>(emptyList())
     override val hrList: StateFlow<List<Int>>
@@ -70,9 +70,19 @@ class AndroidPolarController (
     override val accList: StateFlow<PolarAccelerometerData?>
         get() = _accList.asStateFlow()
 
-    private val _currentAcc = MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
-    override val currentAcc: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
-        get() = _currentAcc.asStateFlow()
+    private val _accCurrent = MutableStateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>(null)
+    override val accCurrent: StateFlow<PolarAccelerometerData.PolarAccelerometerDataSample?>
+        get() = _accCurrent.asStateFlow()
+
+
+    private val _gyrList = MutableStateFlow<PolarGyroData?>(null)
+    override val gyrList: StateFlow<PolarGyroData?>
+        get() = _gyrList.asStateFlow()
+
+    private val _gyrCurrent = MutableStateFlow<PolarGyroData.PolarGyroDataSample?>(null)
+    override val gyrCurrent: StateFlow<PolarGyroData.PolarGyroDataSample?>
+        get() = _gyrCurrent.asStateFlow()
+
 
     private val _connected = MutableStateFlow(false)
     override val connected: StateFlow<Boolean>
@@ -140,7 +150,7 @@ class AndroidPolarController (
                 .subscribe(
                     { hrData: PolarHrData ->
                         for (sample in hrData.samples) {
-                            _currentHR.update { sample.hr }
+                            _hrCurrent.update { sample.hr }
                             _hrList.update { hrList ->
                                 hrList + sample.hr
                             }
@@ -161,38 +171,8 @@ class AndroidPolarController (
     override fun stopHrStreaming() {
         _measuring.update { false }
         hrDisposable?.dispose()
-        _currentHR.update { null }
+        _hrCurrent.update { null }
     }
-
-    /*
-    fun startAccStreaming2(deviceId: String) {
-        val isDisposed = accDisposable?.isDisposed ?: true
-        if(isDisposed) {
-            _measuring.update { true }
-            hrDisposable = api.startAccStreaming(deviceId)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { hrData: PolarHrData ->
-                        for (sample in hrData.samples) {
-                            _currentHR.update { sample.hr }
-                            _hrList.update { hrList ->
-                                hrList + sample.hr
-                            }
-                            Log.d(TAG, sample.hr.toString())
-                        }
-                    },
-                    { error: Throwable ->
-                        Log.e(TAG, "Hr stream failed.\nReason $error")
-                    },
-                    { Log.d(TAG, "Hr stream complete")}
-                )
-        } else {
-            Log.d(TAG, "Already streaming")
-        }
-
-    }
-
-     */
 
     override fun startAccStream(deviceId: String){
         val isDisposed = accDisposable?.isDisposed ?: true
@@ -205,7 +185,12 @@ class AndroidPolarController (
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
-                            _currentAcc.value=(data)
+                            _accCurrent.update { data }
+                            //Log.d(TAG, "ACC in currentAcc: " +currentAcc.value)
+                            _accList.update { currentData ->
+                                val newSamples = currentData?.samples.orEmpty() + data
+                                PolarAccelerometerData(newSamples, data.timeStamp)
+                            }
                             //TODO: add to list
                             Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                         }
@@ -230,7 +215,39 @@ class AndroidPolarController (
     override fun stopAccStreaming() {
         _measuring.update { false }
         accDisposable?.dispose()
-        _currentHR.update { null }
+        _accCurrent.update { null }
+    }
+
+    override fun startGyroStream(deviceId: String){
+        val isDisposed = gyrDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            gyrDisposable =
+                requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.GYRO)
+                    .flatMap { settings: PolarSensorSetting ->
+                        api.startGyroStreaming(deviceId, settings)
+                    }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        { polarGyroData: PolarGyroData ->
+                            for (data in polarGyroData.samples) {
+                                Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                            }
+                        },
+                        { error: Throwable ->
+                            Log.e(TAG, "GYR stream failed. Reason $error")
+                        },
+                        { Log.d(TAG, "GYR stream complete") }
+                    )
+        } else {
+            // NOTE dispose will stop streaming if it is "running"
+            gyrDisposable?.dispose()
+        }
+    }
+
+    override fun stopGyroStreaming() {
+        _measuring.update { false }
+        gyrDisposable?.dispose()
+        _gyrCurrent.update { null }
     }
 
 

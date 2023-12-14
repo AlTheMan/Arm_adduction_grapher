@@ -33,8 +33,8 @@ class DataVM @Inject constructor(
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val linAccDataFlow = internalSensorController.currentLinAccUI
-    private val hrDataFlow = polarController.currentHR
-    private val externalLinAccDataFlow = polarController.currentAcc
+    private val hrDataFlow = polarController.hrCurrent
+    private val externalLinAccDataFlow = polarController.accCurrent
 
     // Combine the two data flows
     val combinedDataFlow= combine(
