@@ -53,7 +53,6 @@ fun BluetoothDataScreen(
             } else {
                 String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
             }
-
         }
         is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
         is CombinedSensorData.LinAccData -> {
@@ -62,6 +61,22 @@ fun BluetoothDataScreen(
                 "no data"
             } else {
                 String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+            }
+        }
+        is CombinedSensorData.ExternalLinAccData ->{
+            val triple = combinedSensorData.extLinAcc
+            if (triple == null){
+                "no data"
+            } else {
+                String.format("%d, %d, %d", triple.x, triple.y, triple.z)
+            }
+        }
+        is CombinedSensorData.ExternalGyroData ->{
+            val triple = combinedSensorData.extGyro
+            if (triple == null){
+                "no data"
+            } else {
+                String.format("%.1f, %.1f, %.1f", triple.x, triple.y, triple.z)
             }
         }
         else -> "-"
