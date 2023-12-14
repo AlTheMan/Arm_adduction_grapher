@@ -10,18 +10,30 @@ private const val alpha = 0.95F //TODO: Ändra från ui?
 
 class CalculationModel {
 
-    private var angle: Float =0f
-    private var addedMeasurement: Boolean = false
+    private var angleAcc: Float =0f
+    private var angleGyro: Float =0f
+    private var addedMeasurementAcc: Boolean = false
+    private var addedMeasurementGyro: Boolean = false
+
 
     fun reset(){
-        addedMeasurement=false;
-        angle=0f
+        addedMeasurementAcc=false;
+        addedMeasurementGyro=false;
+        angleAcc=0f
+        angleGyro=0f
     }
 
-    fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>, timestamp: Long): AngleMeasurements.measurment {
+    fun getLinearAccelerationAngleWithGyroFilter(axes: Triple<Float, Float, Float>, gyroscope: Triple<Float, Float, Float>): Float{
+        var accFiltered = getLinearAccelerationAngle(axes)
         val pitch = getPitchAngle(axes)
-        val angleInDegrees = radiansToDegrees(linearAccelerationFilter(pitch))
-        return AngleMeasurements.measurment(angleInDegrees, timestamp)
+        val gyroFiltered = radiansToDegrees(linearAccelerationFilterGyro(pitch))
+        return sensorFusionFilter(accFiltered, gyroFiltered)
+    }
+
+    fun getLinearAccelerationAngle(axes: Triple<Float, Float, Float>): Float{
+        val pitch = getPitchAngle(axes)
+        val angleInDegrees = radiansToDegrees(linearAccelerationFilterAcc(pitch))
+        return angleInDegrees
     }
 
     /** Rotate x-direction */
@@ -37,19 +49,34 @@ class CalculationModel {
     private fun radiansToDegrees(rad: Float): Float {
         return rad * (180 / Math.PI).toFloat()
     }
+    private fun nonNegativeAngle(defaultAngle: Float):Float{
+        var nonNegativeAngle = defaultAngle
+        if(defaultAngle<0) nonNegativeAngle= defaultAngle*-1
+        return nonNegativeAngle
+    }
 
     private fun sensorFusionFilter(linAccAngle: Float, gyroAngle: Float): Float {
         return alpha * linAccAngle + (1 - alpha) * gyroAngle
     }
 
-    private fun linearAccelerationFilter(value: Float): Float {
-        if (!addedMeasurement) {
-            addedMeasurement=true;
+    private fun linearAccelerationFilterGyro(value: Float): Float {
+        if(!addedMeasurementGyro){
+            addedMeasurementGyro=true
             return value
         }
-        val lastAngle = angle
+        val filteredValue = alpha * value + (1 - alpha) * angleGyro
+        angleGyro=filteredValue
+        return filteredValue
+    }
+
+    private fun linearAccelerationFilterAcc(value: Float): Float {
+        if (!addedMeasurementAcc) {
+            addedMeasurementAcc=true;
+            return value
+        }
+        val lastAngle = angleAcc
         val filteredValue = alpha * value + (1 - alpha) * lastAngle
-        angle=filteredValue
+        angleAcc=filteredValue
         return filteredValue
     }
 

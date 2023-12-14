@@ -153,7 +153,8 @@ class InternalSensorControllerImpl @Inject constructor(
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
             if (_currentLinAcc != null) {
-                var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(_currentLinAcc!!, event.timestamp)
+                var angleMeasurements = AngleMeasurements.measurment(
+                calculationModel.getLinearAccelerationAngle(_currentLinAcc!!),event.timestamp)
                 Log.d(LOG_TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
                 updateAngleValues(angleMeasurements)
             }

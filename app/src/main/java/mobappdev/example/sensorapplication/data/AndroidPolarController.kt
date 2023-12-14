@@ -259,14 +259,14 @@ class AndroidPolarController(
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
-                            val angleMeasurements: AngleMeasurements.measurment =
-                                calculationModel.getLinearAccelerationAngle(
+                            val angleMeasurements= AngleMeasurements.measurment (
+                            calculationModel.getLinearAccelerationAngle(
                                     Triple(
                                         data.x.toFloat(),
                                         data.y.toFloat(),
                                         data.z.toFloat()
-                                    ), data.timeStamp
-                                )
+                                    )
+                                ), data.timeStamp)
                             updateAngleValues(angleMeasurements)
                             Log.d(
                                 TAG,
@@ -310,6 +310,7 @@ class AndroidPolarController(
     override fun stopAccStreaming() {
         _measuring.update { false }
         accDisposable?.dispose()
+        calculationModel.reset()
         _accCurrent.update { null }
     }
 
@@ -329,8 +330,7 @@ class AndroidPolarController(
                                 Log.d(
                                     TAG,
                                     "ACC degrees: " + calculationModel.getLinearAccelerationAngle(
-                                        Triple(data.x, data.y, data.z),
-                                        data.timeStamp
+                                        Triple(data.x, data.y, data.z)
                                     ).toString()
                                 )
                                 _gyrList.update { currentData ->
