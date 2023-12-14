@@ -89,6 +89,10 @@ class AndroidPolarController (
     override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
         get() = _angleMeasurementCurrent.asStateFlow()
 
+    private val _angleMeasurements = MutableStateFlow<AngleMeasurements?>(null)
+    override val angleMeasurements: StateFlow<AngleMeasurements?>
+        get() = _angleMeasurements.asStateFlow()
+
 
 
     private val _devicesFlow = MutableSharedFlow<PolarDeviceInfo>()
@@ -264,21 +268,10 @@ class AndroidPolarController (
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
-                            _accCurrent.update { data }
-                            //Log.d(TAG, "ACC in currentAcc: " +currentAcc.value)
-                            _accList.update { currentData ->
-                                val newSamples = currentData?.samples.orEmpty() + data
-                                PolarAccelerometerData(newSamples, data.timeStamp)
-                            }
                             var angleMeasurements:AngleMeasurements.measurment=calculationModel.getLinearAccelerationAngle(Triple(data.x.toFloat(),data.y.toFloat(),data.z.toFloat()), data.timeStamp)
-                            Log.d(TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
-                            //TODO: add to list
-
-                            _angleMeasurementCurrent.value = angleMeasurements
-                            Log.d(TAG, "_angleMeasurementCurrent angle: " + _angleMeasurementCurrent.value?.angle.toString() + ", timestamp:" + _angleMeasurementCurrent.value?.timestamp.toString())
-                            Log.d(TAG, "angleMeasurementCurrent angle: " + angleMeasurementCurrent.value?.angle.toString() + ", timestamp:" + angleMeasurementCurrent.value?.timestamp.toString())
-
+                            updateAngleValues(angleMeasurements)
                             Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                            Log.d(TAG, "angle: "+angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
                         }
                     },
                     { error: Throwable ->
@@ -296,6 +289,18 @@ class AndroidPolarController (
             //accDisposable?.dispose()
             Log.d(TAG, "ACC Already streaming")
         }
+    }
+    
+    private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment){
+        _angleMeasurementCurrent.value = angleMeasurements
+
+        // Create a new mutable list from the existing list and add the new measurement
+        val updatedList = _angleMeasurements.value?.list?.toMutableList() ?: mutableListOf()
+        updatedList.add(angleMeasurements)
+        val updatedAngleMeasurements = AngleMeasurements(updatedList)
+        // Update _angleMeasurements with the new object
+        _angleMeasurements.value = updatedAngleMeasurements
+
     }
 
     override fun stopAccStreaming() {

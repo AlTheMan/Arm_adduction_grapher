@@ -10,25 +10,8 @@ private const val alpha = 0.95F //TODO: Ändra från ui?
 
 class CalculationModel {
 
-    //private var angleMeasurements2: MutableList<Float> = mutableListOf()
-    //private var angleMeasurements: MutableList<Pair<Float, Long>> = mutableListOf()
-    //private var angleMeasurments = AngleMeasurements()
     private var angle: Float =0f
     private var addedMeasurement: Boolean = false
-
-    //private val _angleMeasurementsFlow = MutableStateFlow(angleMeasurments)
-    //val angleMeasurementsFlow: StateFlow<AngleMeasurements>
-    //    get() = _angleMeasurementsFlow.asStateFlow()
-
-    //private val _angleMeasurementLastFlow= MutableStateFlow(angleMeasurments.list.last())
-    //val angleMeasurementLastFlow: StateFlow<AngleMeasurements.measurment>
-     //   get() = _angleMeasurementLastFlow.asStateFlow()
-
-    //private val _angleMeasurementLastFlow = MutableStateFlow(
-    //    _angleMeasurementsFlow.value.list.lastOrNull() ?: AngleMeasurements.measurment(0f, 0L)
-    //)
-    //val angleMeasurementLastFlow: StateFlow<AngleMeasurements.measurment>
-    //    get() = _angleMeasurementLastFlow.asStateFlow()
 
     fun reset(){
         addedMeasurement=false;
