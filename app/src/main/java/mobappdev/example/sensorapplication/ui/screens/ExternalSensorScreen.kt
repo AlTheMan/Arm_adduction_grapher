@@ -14,7 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 @Composable
-fun ExternalSensorScreen ( vm: DataVM, modifier:Modifier){
+fun ExternalSensorScreen (vm: DataVM){
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
     val deviceList by vm.deviceList.collectAsState()

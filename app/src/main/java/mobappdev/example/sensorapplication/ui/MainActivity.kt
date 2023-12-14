@@ -18,15 +18,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
+import mobappdev.example.sensorapplication.ui.screens.ExternalSensorScreen
+import mobappdev.example.sensorapplication.ui.screens.HomeScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     // Todo: Change for your own deviceID
-    private var deviceId = "B36B5C22" //B36B5C22  //B36B2C29
+    private var deviceId = "B36B2C29" //B36B5C22  //B36B2C29
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +49,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             SensorapplicationTheme {
                 val dataVM = hiltViewModel<DataVM>()
-
                 // Use hardcoded deviceID
                 dataVM.chooseSensor(deviceId)
 
@@ -53,9 +57,29 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BluetoothDataScreen(
-                        vm = dataVM
-                    )
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "homeScreen") {
+                        composable("homeScreen") {
+                            HomeScreen(
+                                onInternalButtonClicked = {
+                                    navController.navigate("internalScreen")
+                                },
+                                onExternalButtonClicked = {
+                                    navController.navigate("externalScreen")
+                                }
+                            )
+                        }
+
+                        composable("externalScreen") {
+                            ExternalSensorScreen(vm = dataVM, modifier = Modifier)
+                        }
+
+                        composable("internalScreen") {
+                            BluetoothDataScreen(vm = dataVM)
+                        }
+
+                    }
+
                 }
             }
         }
