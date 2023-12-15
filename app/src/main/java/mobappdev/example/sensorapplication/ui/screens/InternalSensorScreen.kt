@@ -44,6 +44,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
 
         Spacer(modifier = Modifier.height(200.dp))
 
+
         if (state.measuring) {
             Text(
                 text = state.countDownTimer.toString(),
@@ -64,6 +65,12 @@ fun InternalSensorScreen(vm: InternalDataVM) {
                 onButtonClick = vm::stopDataStream
             )
         } else {
+            CardButton(
+                buttonText = "Export",
+                enabled = true,
+                cardHeight = 70.dp,
+                onButtonClick = vm::exportData
+            )
             Row(horizontalArrangement = Arrangement.Center) {
                 Column(modifier = Modifier.weight(1F)) {
                     SingleDualCardButton(

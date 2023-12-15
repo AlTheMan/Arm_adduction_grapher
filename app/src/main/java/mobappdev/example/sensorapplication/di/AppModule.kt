@@ -17,6 +17,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import mobappdev.example.sensorapplication.data.AndroidPolarController
 import mobappdev.example.sensorapplication.data.CalculationModel
+import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.data.InternalSensorControllerImpl
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
@@ -37,6 +38,12 @@ object AppModule {
     @Singleton
     fun providePolarController(@ApplicationContext context: Context, calculationModel: CalculationModel): PolarController {
         return AndroidPolarController(context, calculationModel)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCsvExporter(): CsvExporter {
+        return CsvExporter()
     }
 
     @Provides

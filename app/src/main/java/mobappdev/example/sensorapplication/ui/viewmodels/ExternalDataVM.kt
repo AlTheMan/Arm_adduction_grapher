@@ -6,7 +6,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  *          Uses Dagger-Hilt to inject a controller model
  * Author:
  * Created: 2023-07-08
- * Last modified: 2023-07-11
+ * Last modified:
  */
 
 import android.util.Log

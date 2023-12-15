@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import javax.inject.Inject
 
@@ -15,7 +16,8 @@ private const val TAG = "InternalDataVM"
 
 @HiltViewModel
 class InternalDataVM @Inject constructor(
-    private val internalSensorController: InternalSensorController
+    private val internalSensorController: InternalSensorController,
+    private val csvExporter: CsvExporter
 ) : ViewModel() {
 
     private var countDownTimer: CountDownTimer? = null
@@ -70,6 +72,10 @@ class InternalDataVM @Inject constructor(
         internalSensorController.startImuStream()
         streamType = StreamType.SINGLE
         _internalUiState.update { it.copy(measuring = true) }
+    }
+
+    fun exportData(){
+        csvExporter.exportData()
     }
 
     private fun startCountdownTimer(totalTime: Long) {
