@@ -87,7 +87,7 @@ fun ExternalSensorScreen(vm: DataVM) {
                 buttonText = "Start",
                 enabled = state.connected,
                 cardHeight = 100.dp,
-                onButtonClick = if (state.dualMeasurement) vm::startExtAcc else vm::startGyro,
+                onButtonClick = if (state.dualMeasurement) vm::startExtAccAndGyro else vm::startExtAcc,
             )
         }
     }
