@@ -5,9 +5,9 @@ import com.polar.sdk.api.model.PolarSensorSetting.SettingType
 import io.reactivex.rxjava3.core.Single
 import java.util.EnumMap
 
-object DialogUtility {
+object SettingsUtility {
 
-    fun showAllSettingsDialog(
+    fun getSettings(
         available: Map<SettingType, Set<Int>>,
         all: Map<SettingType, Set<Int>>
     ): Single<PolarSensorSetting> {

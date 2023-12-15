@@ -473,7 +473,7 @@ class AndroidPolarController(
             .observeOn(AndroidSchedulers.mainThread())
             .toFlowable()
             .flatMap { sensorSettings: android.util.Pair<PolarSensorSetting, PolarSensorSetting> ->
-                DialogUtility.showAllSettingsDialog(
+                SettingsUtility.getSettings(
                     sensorSettings.first.settings,
                     sensorSettings.second.settings
                 ).toFlowable()
