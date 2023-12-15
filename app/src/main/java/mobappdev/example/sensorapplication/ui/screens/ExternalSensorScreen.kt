@@ -3,7 +3,9 @@ package mobappdev.example.sensorapplication.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,10 +28,12 @@ fun ExternalSensorScreen(vm: DataVM) {
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
     val deviceList by vm.deviceList.collectAsState()
     val angle by vm.angleCurrentExternal.collectAsState()
-    val mockDevices by vm.mockDeviceList.collectAsState()
     
     Row {
-        CardButton(buttonText = "Search for devices", enabled = true, cardHeight = 50.dp, vm::openBluetoothDialog)
+        if (!state.connected)
+            CardButton(buttonText = "Search for devices", enabled = !state.isSearching, cardHeight = 50.dp, vm::openBluetoothDialog)
+        else
+            CardButton(buttonText = "Disconnect $deviceId", enabled = true, cardHeight = 50.dp, vm::disconnectFromSensor)
     }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -37,26 +41,27 @@ fun ExternalSensorScreen(vm: DataVM) {
         horizontalAlignment = Alignment.CenterHorizontally
         ) {
         if (state.showDialog) {
-            BluetoothSearchDialog(devices = deviceList, onCardClicked = vm::chooseSensor, closeDialog = vm::closeBluetoothDialog)
+            BluetoothSearchDialog(devices = deviceList, onCardClicked = vm::chooseSensorAndConnect, closeDialog = vm::closeBluetoothDialog)
         }
         Text(
             text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
             fontSize = 54.sp,
             color = Color.Black,
         )
+        Spacer(modifier = Modifier.height(200.dp))
         if (state.measuring) {
             CardButton(
                 buttonText = "Stop",
                 enabled = true,
                 cardHeight = 100.dp,
-                onButtonClick = {},
+                onButtonClick = vm::stopDataStream,
             )
         } else {
             CardButton(
                 buttonText = "Start",
                 enabled = state.connected,
                 cardHeight = 100.dp,
-                onButtonClick = {},
+                onButtonClick = vm::startExtAcc,
             )
         }
     }

@@ -16,13 +16,11 @@ import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarGyroData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,15 +41,8 @@ class DataVM @Inject constructor(
     private val hrDataFlow = polarController.hrCurrent
     private val externalLinAccDataFlow = polarController.accCurrent
     private val externalGyroDataFlow = polarController.gyrCurrent
-    public val angleCurrentExternal = polarController.angleMeasurementCurrent
-    public val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
-
-
-    private val _mockDeviceList = MutableStateFlow<List<String>>(listOf())
-    val mockDeviceList: StateFlow<List<String>> = _mockDeviceList.asStateFlow()
-
-    //private var isSearching: Boolean = false;
-
+    val angleCurrentExternal = polarController.angleMeasurementCurrent
+    val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
 
     private val _deviceList = MutableStateFlow<List<PolarDeviceInfo>>(listOf())
     val deviceList: StateFlow<List<PolarDeviceInfo>>
@@ -106,6 +97,12 @@ class DataVM @Inject constructor(
 
     fun connectToSensor() {
         polarController.connectToDevice(_deviceId.value)
+    }
+
+    fun chooseSensorAndConnect(deviceId: String) {
+        _deviceId.update { deviceId }
+        polarController.connectToDevice(deviceId)
+        closeBluetoothDialog()
     }
 
 

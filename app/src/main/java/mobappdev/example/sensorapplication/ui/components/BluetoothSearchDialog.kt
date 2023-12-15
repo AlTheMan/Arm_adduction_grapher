@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.polar.sdk.api.model.PolarDeviceInfo
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BluetoothSearchDialog(
     devices: List<PolarDeviceInfo>, onCardClicked: (String) -> Unit, closeDialog: () -> Unit
@@ -36,7 +37,6 @@ fun BluetoothSearchDialog(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             val scrollState = rememberScrollState()
-            //val mockDevices: List<String> = listOf("1", "2", "3", "4", "5", "4", "5", "4", "5")
             Column (modifier = Modifier.fillMaxWidth()){
                 Text(text = "Bluetooth Devices")
                 LazyColumn(modifier = Modifier.height(250.dp)) {
@@ -54,7 +54,8 @@ fun BluetoothSearchDialog(
                                 ),
                                 elevation = CardDefaults.cardElevation(
                                     defaultElevation = 5.dp
-                                )
+                                ),
+                                onClick = {onCardClicked(it.deviceId)}
                             ) {
                                 Text(text = it.name)
                             }
