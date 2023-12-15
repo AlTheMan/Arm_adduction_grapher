@@ -46,7 +46,11 @@ class DataVM @Inject constructor(
     public val angleCurrentExternal = polarController.angleMeasurementCurrent
     public val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
 
-    private var isSearching: Boolean = false;
+
+    private val _mockDeviceList = MutableStateFlow<List<String>>(listOf())
+    val mockDeviceList: StateFlow<List<String>> = _mockDeviceList.asStateFlow()
+
+    //private var isSearching: Boolean = false;
 
 
     private val _deviceList = MutableStateFlow<List<PolarDeviceInfo>>(listOf())
@@ -102,19 +106,6 @@ class DataVM @Inject constructor(
 
     fun connectToSensor() {
         polarController.connectToDevice(_deviceId.value)
-    }
-
-    // In view model
-    fun searchBTDevices() {
-
-        viewModelScope.launch {
-            if (!isSearching){
-                _deviceList.value = emptyList()
-            }
-            isSearching = polarController.searchBTDevices()
-            Log.d(LOG_TAG, "IsSearching: $isSearching")
-        }
-
     }
 
 
@@ -176,8 +167,6 @@ class DataVM @Inject constructor(
                 }
         }
     }
-
-
     private fun deviceInList(polarDeviceInfo: PolarDeviceInfo) : Boolean {
         for (element in _deviceList.value) {
             if (polarDeviceInfo.deviceId == element.deviceId) {
@@ -186,12 +175,33 @@ class DataVM @Inject constructor(
         }
         return false
     }
+
+    private fun searchBTDevices() {
+        viewModelScope.launch {
+            if (!state.value.isSearching){
+                _deviceList.value = emptyList()
+            }
+            _state.value = _state.value.copy(isSearching = polarController.searchBTDevices())
+            Log.d(LOG_TAG, "IsSearching: ${_state.value.isSearching}")
+        }
+    }
+    fun openBluetoothDialog() {
+        _state.value = state.value.copy(showDialog = true)
+        searchBTDevices()
+
+    }
+    fun closeBluetoothDialog() {
+        _state.value = _state.value.copy(showDialog = false)
+        searchBTDevices()
+    }
 }
 
 data class DataUiState(
     val hrList: List<Int> = emptyList(),
     val connected: Boolean = false,
-    val measuring: Boolean = false
+    val measuring: Boolean = false,
+    val showDialog: Boolean = false,
+    val isSearching: Boolean = false
 )
 
 enum class StreamType {

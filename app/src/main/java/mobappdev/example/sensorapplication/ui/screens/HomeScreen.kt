@@ -82,7 +82,6 @@ fun ClickableIconCard(
             .padding(50.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         onClick = onCardClicked
     ) {

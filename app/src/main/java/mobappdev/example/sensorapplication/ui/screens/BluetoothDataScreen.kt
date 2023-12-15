@@ -116,7 +116,7 @@ fun BluetoothDataScreen(
                 color = Color.Black,
             )
             Spacer(modifier = Modifier.height(32.dp))
-            ExternalSensorScreen(vm = vm, modifier =Modifier )
+            //ExternalSensorScreen(vm = vm)
 
         }
         Row(
@@ -134,7 +134,7 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Connect\n${deviceId}")
             }
-            Button(
+           /* Button(
                 onClick = vm::searchBTDevices,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -142,7 +142,7 @@ fun BluetoothDataScreen(
                 )
             ) {
                 Text(text = "Search Devices")
-            }
+            }*/
             Button(
                 onClick = vm::disconnectFromSensor,
                 enabled = state.connected,

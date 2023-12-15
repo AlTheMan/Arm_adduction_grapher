@@ -70,13 +70,15 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable("externalScreen") {
-                            ExternalSensorScreen(vm = dataVM, modifier = Modifier)
-                        }
-
                         composable("internalScreen") {
                             BluetoothDataScreen(vm = dataVM)
                         }
+
+                        composable("externalScreen") {
+                            ExternalSensorScreen(vm = dataVM)
+                        }
+
+
 
                     }
 
