@@ -45,8 +45,11 @@ interface PolarController {
 
     suspend fun searchBTDevices(): Boolean
 
-    fun startAccStream(deviceId: String)
+    fun startAccAndGyroStream(deviceId: String)
+    fun stopAccAndGyroStreaming()
 
+
+    fun startAccStream(deviceId: String)
     fun stopAccStreaming()
 
     fun startGyroStream(deviceId: String) //start streaming gyroscope measurements

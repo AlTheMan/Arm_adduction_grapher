@@ -134,6 +134,16 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Connect\n${deviceId}")
             }
+            Button(
+                onClick = vm::startExtAccAndGyro ,
+                enabled = (state.connected && !state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "start\next both")
+            }
            /* Button(
                 onClick = vm::searchBTDevices,
                 colors = ButtonDefaults.buttonColors(

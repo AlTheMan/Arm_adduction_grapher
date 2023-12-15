@@ -4,7 +4,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * File: DataVM.kt
  * Purpose: Defines the view model of the data screen.
  *          Uses Dagger-Hilt to inject a controller model
- * Author: Jitse van Esch
+ * Author:
  * Created: 2023-07-08
  * Last modified: 2023-07-11
  */
@@ -117,6 +117,14 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
+    fun startExtAccAndGyro(){
+        polarController.startAccAndGyroStream(_deviceId.value)
+        //polarController.startAccStream(_deviceId.value)
+        //polarController.startGyroStream(_deviceId.value)
+        streamType = StreamType.FOREIGN_ACC_AND_GYRO
+        _state.update { it.copy(measuring = true) }
+    }
+
     fun startExtAcc() {
         polarController.startAccStream(_deviceId.value)
         streamType = StreamType.FOREIGN_ACC
@@ -149,10 +157,12 @@ class DataVM @Inject constructor(
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
             StreamType.FOREIGN_GYRO -> polarController.stopGyroStreaming()
+            StreamType.FOREIGN_ACC_AND_GYRO -> {polarController.stopAccStreaming(); polarController.stopAccStreaming()}
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
     }
+
 
     init {
         viewModelScope.launch {
@@ -201,6 +211,8 @@ class DataVM @Inject constructor(
     }
 }
 
+
+
 data class DataUiState(
     val hrList: List<Int> = emptyList(),
     val connected: Boolean = false,
@@ -211,7 +223,7 @@ data class DataUiState(
 )
 
 enum class StreamType {
-    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC, FOREIGN_GYRO
+    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC, FOREIGN_GYRO, FOREIGN_ACC_AND_GYRO
 }
 
 sealed class CombinedSensorData {
