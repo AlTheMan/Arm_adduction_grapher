@@ -11,7 +11,7 @@ import java.util.Locale
 
 class CsvExporter {
 
-    fun exportMeasurements(measurements: List<AngleMeasurements.measurment>) {
+    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>) {
         val baseDir = android.os.Environment.getExternalStorageDirectory().absolutePath
         val fileName = "MeasurementsData.csv"
         val filePath = "$baseDir${File.separator}$fileName"
