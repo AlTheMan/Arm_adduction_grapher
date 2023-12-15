@@ -63,7 +63,7 @@ fun CardIcon(
         painterResource(
             id = icon),
             contentDescription = contentDescription, modifier = Modifier.fillMaxSize(0.8F))
-        Text(text = cardDescription, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        Text(text = cardDescription, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
     }
 }
 

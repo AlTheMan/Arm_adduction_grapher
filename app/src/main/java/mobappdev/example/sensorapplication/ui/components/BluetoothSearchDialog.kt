@@ -3,8 +3,10 @@ package mobappdev.example.sensorapplication.ui.components
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,11 @@ fun BluetoothSearchDialog(
         ) {
             val scrollState = rememberScrollState()
             Column (modifier = Modifier.fillMaxWidth()){
-                Text(text = "Bluetooth Devices")
+                Row ( verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()){
+                    Text(text = "Bluetooth Devices", style = MaterialTheme.typography.titleLarge)
+                }
                 LazyColumn(modifier = Modifier.height(250.dp)) {
                     items(devices) { it ->
                         Row(Modifier.animateItemPlacement(tween(durationMillis = 250))) {
@@ -57,7 +64,13 @@ fun BluetoothSearchDialog(
                                 ),
                                 onClick = {onCardClicked(it.deviceId)}
                             ) {
-                                Text(text = it.name)
+                                Row (
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ){
+                                    Text(text = it.name, style = MaterialTheme.typography.bodyLarge)
+                                }
                             }
 
                         }
