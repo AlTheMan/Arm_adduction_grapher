@@ -22,12 +22,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
 import mobappdev.example.sensorapplication.ui.screens.ExternalSensorScreen
 import mobappdev.example.sensorapplication.ui.screens.HomeScreen
 import mobappdev.example.sensorapplication.ui.screens.InternalSensorScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
-import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 @AndroidEntryPoint
@@ -50,10 +49,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SensorapplicationTheme {
-                val dataVM = hiltViewModel<DataVM>()
+                val externalDataVM = hiltViewModel<ExternalDataVM>()
                 val internalDataVM = hiltViewModel<InternalDataVM>()
                 // Use hardcoded deviceID
-                dataVM.chooseSensor(deviceId)
+                externalDataVM.chooseSensor(deviceId)
 
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -78,7 +77,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("externalScreen") {
-                            ExternalSensorScreen(vm = dataVM)
+                            ExternalSensorScreen(vm = externalDataVM)
                         }
 
 

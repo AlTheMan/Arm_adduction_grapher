@@ -18,7 +18,7 @@ interface InternalSensorController {
     val streamingLinAcc: StateFlow<Boolean>
     //val angleMeasurements: StateFlow<AngleMeasurements>
     //val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment>
-    val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+    val angleMeasurementCurrent: StateFlow<AngleMeasurements.Measurement?>
     val angleMeasurements: StateFlow<AngleMeasurements?>
 
 

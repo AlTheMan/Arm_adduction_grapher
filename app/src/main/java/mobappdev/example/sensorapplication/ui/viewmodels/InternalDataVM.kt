@@ -18,9 +18,7 @@ class InternalDataVM @Inject constructor(
     private val internalSensorController: InternalSensorController
 ) : ViewModel() {
 
-    private val gyroDataFlow = internalSensorController.currentGyroUI
-    private val linAccDataFlow = internalSensorController.currentLinAccUI
-    var countDownTimer: CountDownTimer? = null
+    private var countDownTimer: CountDownTimer? = null
     val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
 
     private val _internalUiState = MutableStateFlow(InternalDataUiState())
@@ -56,7 +54,7 @@ class InternalDataVM @Inject constructor(
             startAcc()
         }
         if (_internalUiState.value.selectedTimerValue < MAX_TIMER) {
-            startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * 1000, 1000)
+            startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * 1000)
         }
     }
 
@@ -74,8 +72,8 @@ class InternalDataVM @Inject constructor(
         _internalUiState.update { it.copy(measuring = true) }
     }
 
-    private fun startCountdownTimer(totalTime: Long, interval: Long) {
-        countDownTimer = object : CountDownTimer(totalTime, interval) {
+    private fun startCountdownTimer(totalTime: Long) {
+        countDownTimer = object : CountDownTimer(totalTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 println("Seconds remaining: ${millisUntilFinished / 1000}")
                 _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / 1000).toInt()) }
@@ -91,7 +89,7 @@ class InternalDataVM @Inject constructor(
 
     private fun cancelTimer(){
         countDownTimer?.cancel()
-        countDownTimer = null;
+        countDownTimer = null
     }
 
     fun setSingleMeasurement() {

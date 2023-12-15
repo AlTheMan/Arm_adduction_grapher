@@ -7,7 +7,7 @@ package mobappdev.example.sensorapplication.ui.screens
  * Created: 2023-07-08
  * Last modified: 2023-07-11
  */
-
+/*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,11 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
-import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
 
 @Composable
 fun BluetoothDataScreen(
-    vm: DataVM
+    vm: ExternalDataVM
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
@@ -243,3 +243,5 @@ fun BluetoothDataScreen(
         }
     }
 }
+
+ */
