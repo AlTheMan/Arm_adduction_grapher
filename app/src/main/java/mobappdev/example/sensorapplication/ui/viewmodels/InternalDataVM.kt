@@ -1,5 +1,6 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
+import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,7 @@ import javax.inject.Inject
 @HiltViewModel
 class InternalDataVM @Inject constructor(
     private val internalSensorController: InternalSensorController
-) {
+) : ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val linAccDataFlow = internalSensorController.currentLinAccUI
@@ -50,12 +51,26 @@ class InternalDataVM @Inject constructor(
         _internalUiState.update { it.copy(measuring = true) }
     }
 
+    fun setSingleMeasurement() {
+        _internalUiState.update { it.copy(dualMeasurement = false) }
+    }
+
+    fun setDualMeasurement() {
+        _internalUiState.update { it.copy(dualMeasurement = true) }
+    }
+
+    fun setTimerValue(value: Float) {
+        _internalUiState.update { it.copy(selectedNumber = value) }
+    }
+
     private enum class StreamType {
         SINGLE, DUAL
     }
+
 }
 
 data class InternalDataUiState(
     val measuring: Boolean = false,
     val dualMeasurement: Boolean = false,
+    val selectedNumber: Float = 1f
 )

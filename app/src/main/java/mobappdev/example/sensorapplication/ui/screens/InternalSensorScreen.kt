@@ -1,51 +1,82 @@
 package mobappdev.example.sensorapplication.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import mobappdev.example.sensorapplication.ui.components.CardButton
+import mobappdev.example.sensorapplication.ui.components.NumberPickerSlider
+import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
+import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
 @Composable
-fun InternalSensorScreen(){
+fun InternalSensorScreen(vm: InternalDataVM) {
 
-    val testList: List<String> = listOf("one", "two", "three", "four")
+    val state by vm.internalUiState.collectAsState()
+    val angle by vm.angleCurrentInternal.collectAsState()
 
-
-    LazyColumn {
-        items(testList) {
-                it ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp),
-                shape = RectangleShape,
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 10.dp
-                )) {
-                Text(text = it)
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        NumberPickerSlider(range = 1..31, selectedNumber = state.selectedNumber, onNumberSelected = vm::setTimerValue)
+        Text(
+            text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
+            fontSize = 54.sp,
+            color = Color.Black,
+        )
+        Spacer(modifier = Modifier.height(200.dp))
+        if (state.measuring) {
+            CardButton(
+                buttonText = "Stop",
+                enabled = true,
+                cardHeight = 100.dp,
+                onButtonClick = vm::stopDataStream
+            )
+        } else {
+            Row(horizontalArrangement = Arrangement.Center) {
+                Column(modifier = Modifier.weight(1F)) {
+                    SingleDualCardButton(
+                        buttonText = "Single",
+                        enabled = state.dualMeasurement,
+                        cardHeight = 50.dp,
+                        onButtonClick = vm::setSingleMeasurement
+                    )
+                }
+                Column(modifier = Modifier.weight(1F)) {
+                    SingleDualCardButton(
+                        buttonText = "Dual",
+                        enabled = !state.dualMeasurement,
+                        cardHeight = 50.dp,
+                        onButtonClick = vm::setDualMeasurement,
+                    )
+                }
             }
+            CardButton(
+                buttonText = "Start",
+                enabled = true,
+                cardHeight = 100.dp,
+                onButtonClick = if (state.dualMeasurement) vm::startAccAndGyro else vm::startAcc,
+            )
         }
     }
 
 
 }
 
-@Composable
-@Preview
-fun InternalSensorScreenPreview(){
-    InternalSensorScreen()
-}
+
 
 

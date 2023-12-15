@@ -25,8 +25,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
 import mobappdev.example.sensorapplication.ui.screens.ExternalSensorScreen
 import mobappdev.example.sensorapplication.ui.screens.HomeScreen
+import mobappdev.example.sensorapplication.ui.screens.InternalSensorScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SensorapplicationTheme {
                 val dataVM = hiltViewModel<DataVM>()
+                val internalDataVM = hiltViewModel<InternalDataVM>()
                 // Use hardcoded deviceID
                 dataVM.chooseSensor(deviceId)
 
@@ -71,7 +74,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("internalScreen") {
-                            BluetoothDataScreen(vm = dataVM)
+                            InternalSensorScreen(vm = internalDataVM)
                         }
 
                         composable("externalScreen") {
