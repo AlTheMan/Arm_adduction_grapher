@@ -22,7 +22,6 @@ import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.CoroutineScope
@@ -76,8 +75,8 @@ class AndroidPolarController(
     //override val angleMeasurements: StateFlow<AngleMeasurements> = calculationModel.angleMeasurementsFlow
     //override val angleMeasurementCurrent2: StateFlow<AngleMeasurements.measurment> = calculationModel.angleMeasurementLastFlow
 
-    private val _angleMeasurementCurrent = MutableStateFlow<AngleMeasurements.measurment?>(null)
-    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+    private val _angleMeasurementCurrent = MutableStateFlow<AngleMeasurements.Measurement?>(null)
+    override val angleMeasurementCurrent: StateFlow<AngleMeasurements.Measurement?>
         get() = _angleMeasurementCurrent.asStateFlow()
 
     private val _angleMeasurements = MutableStateFlow<AngleMeasurements?>(null)
@@ -125,7 +124,7 @@ class AndroidPolarController(
         get() = _measuring.asStateFlow()
 
     private var gyroQueueUnprocessed: ArrayDeque<PolarGyroData.PolarGyroDataSample> = ArrayDeque()
-    private var accQueueUnprocessed: ArrayDeque<PolarAccelerometerData.PolarAccelerometerDataSample> =ArrayDeque()
+    private var accQueueUnprocessed: ArrayDeque<PolarAccelerometerData.PolarAccelerometerDataSample> = ArrayDeque()
 
     init {
         api.setPolarFilter(true)
@@ -263,7 +262,7 @@ class AndroidPolarController(
                 .subscribe(
                     { polarAccelerometerData: PolarAccelerometerData ->
                         for (data in polarAccelerometerData.samples) {
-                            val angleMeasurements= AngleMeasurements.measurment (
+                            val angleMeasurements= AngleMeasurements.Measurement (
                             calculationModel.getLinearAccelerationAngle(
                                     Triple(
                                         data.x.toFloat(),
@@ -294,7 +293,7 @@ class AndroidPolarController(
         }
     }
 
-    private fun updateAngleValues(angleMeasurements: AngleMeasurements.measurment) {
+    private fun updateAngleValues(angleMeasurements: AngleMeasurements.Measurement) {
         _angleMeasurementCurrent.value = angleMeasurements
 
         // Create a new mutable list from the existing list and add the new measurement
@@ -356,7 +355,6 @@ class AndroidPolarController(
     override fun startAccAndGyroStream(deviceId: String) {
         val isAccDisposed = accDisposable?.isDisposed ?: true
         val isGyrDisposed = gyrDisposable?.isDisposed ?: true
-
         if (isAccDisposed || isGyrDisposed) {
             val accStream = requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.ACC)
                 .flatMap { settings ->
@@ -386,7 +384,7 @@ class AndroidPolarController(
                                     gyroQueueUnprocessed.add(data)
                                     Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                                 }
-                                retreiveAnglesFromQueues()
+                                retrieveAnglesFromQueues()
                             }
                         }
                     },
@@ -406,12 +404,12 @@ class AndroidPolarController(
         }
     }
 
-    private fun retreiveAnglesFromQueues(){
+    private fun retrieveAnglesFromQueues(){
         while (accQueueUnprocessed.isNotEmpty() && gyroQueueUnprocessed.isNotEmpty()) {
             val acc = accQueueUnprocessed.removeFirst()
             val gyro = gyroQueueUnprocessed.removeFirst()
 
-            val angleMeasurements= AngleMeasurements.measurment (
+            val angleMeasurements= AngleMeasurements.Measurement (
                 calculationModel.getLinearAccelerationAngleWithGyroFilter(
                     Triple(
                         acc.x.toFloat(),

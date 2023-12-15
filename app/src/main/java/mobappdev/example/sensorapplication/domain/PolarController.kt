@@ -24,7 +24,7 @@ interface PolarController {
     val hrList: StateFlow<List<Int>>
     val devicesFlow: Flow<PolarDeviceInfo>
     val foundDevices: Flow<PolarDeviceInfo>
-    val angleMeasurementCurrent: StateFlow<AngleMeasurements.measurment?>
+    val angleMeasurementCurrent: StateFlow<AngleMeasurements.Measurement?>
     val angleMeasurements: StateFlow<AngleMeasurements?>
 
     val accList: StateFlow<PolarAccelerometerData?>

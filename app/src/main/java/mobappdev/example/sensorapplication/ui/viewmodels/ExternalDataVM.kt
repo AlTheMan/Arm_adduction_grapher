@@ -37,8 +37,7 @@ class ExternalDataVM @Inject constructor(
         get() = _deviceList.asStateFlow()
     private val _state = MutableStateFlow(DataUiState())
     val state = combine(
-        polarController.connected,
-        _state
+        polarController.connected, _state
     ) { connected, state ->
         state.copy(
             connected = connected,
@@ -67,12 +66,11 @@ class ExternalDataVM @Inject constructor(
         connectToSensor()
         closeBluetoothDialog()
     }
-
-
     fun disconnectFromSensor() {
         stopDataStream()
         polarController.disconnectFromDevice(_deviceId.value)
     }
+
     fun startExtAccAndGyro() {
         polarController.startAccAndGyroStream(_deviceId.value)
         streamType = StreamType.FOREIGN_ACC_AND_GYRO
@@ -145,8 +143,7 @@ class ExternalDataVM @Inject constructor(
 
     init {
         viewModelScope.launch {
-            polarController.foundDevices
-                .collect {
+            polarController.foundDevices.collect {
                     if (!deviceInList(it)) {
                         _deviceList.value = (_deviceList.value + it).toMutableList()
                     }
