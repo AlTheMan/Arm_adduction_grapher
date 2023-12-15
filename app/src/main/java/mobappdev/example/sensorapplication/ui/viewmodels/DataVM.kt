@@ -191,6 +191,14 @@ class DataVM @Inject constructor(
         _state.value = _state.value.copy(showDialog = false)
         searchBTDevices()
     }
+
+    fun setSingleMeasurement() {
+       _state.value = _state.value.copy(dualMeasurement = false)
+    }
+
+    fun setDualMeasurement(){
+        _state.value = state.value.copy(dualMeasurement = true)
+    }
 }
 
 data class DataUiState(
@@ -198,7 +206,8 @@ data class DataUiState(
     val connected: Boolean = false,
     val measuring: Boolean = false,
     val showDialog: Boolean = false,
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    val dualMeasurement: Boolean = false
 )
 
 enum class StreamType {

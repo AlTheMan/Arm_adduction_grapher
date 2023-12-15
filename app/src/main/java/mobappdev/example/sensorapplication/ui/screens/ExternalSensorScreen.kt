@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.components.BluetoothSearchDialog
 import mobappdev.example.sensorapplication.ui.components.CardButton
+import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,9 +32,21 @@ fun ExternalSensorScreen(vm: DataVM) {
     
     Row {
         if (!state.connected)
-            CardButton(buttonText = "Search for devices", enabled = !state.isSearching, cardHeight = 50.dp, vm::openBluetoothDialog)
+            CardButton(
+                modifier = Modifier,
+                buttonText = "Search for devices",
+                enabled = !state.isSearching,
+                cardHeight = 50.dp,
+                vm::openBluetoothDialog
+            )
         else
-            CardButton(buttonText = "Disconnect $deviceId", enabled = true, cardHeight = 50.dp, vm::disconnectFromSensor)
+            CardButton(
+                modifier = Modifier,
+                buttonText = "Disconnect $deviceId",
+                enabled = true,
+                cardHeight = 50.dp,
+                vm::disconnectFromSensor
+            )
     }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -54,14 +67,27 @@ fun ExternalSensorScreen(vm: DataVM) {
                 buttonText = "Stop",
                 enabled = true,
                 cardHeight = 100.dp,
-                onButtonClick = vm::stopDataStream,
+                onButtonClick = vm::stopDataStream
             )
         } else {
+            Row (horizontalArrangement = Arrangement.Center){
+                Column(modifier = Modifier.weight(1F)) {
+                    SingleDualCardButton(buttonText = "Single", enabled = state.dualMeasurement , cardHeight = 50.dp, onButtonClick = vm::setSingleMeasurement)
+                }
+                Column(modifier = Modifier.weight(1F)) {
+                    SingleDualCardButton(
+                        buttonText = "Dual",
+                        enabled = !state.dualMeasurement,
+                        cardHeight = 50.dp,
+                        onButtonClick = vm::setDualMeasurement,
+                    )
+                }
+            }
             CardButton(
                 buttonText = "Start",
                 enabled = state.connected,
                 cardHeight = 100.dp,
-                onButtonClick = vm::startExtAcc,
+                onButtonClick = if (state.dualMeasurement) vm::startExtAcc else vm::startGyro,
             )
         }
     }
