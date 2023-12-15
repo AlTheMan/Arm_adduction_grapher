@@ -1,12 +1,19 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import javax.inject.Inject
+
+private const val MAX_TIMER = 31
+private const val TAG = "InternalDataVM"
 
 @HiltViewModel
 class InternalDataVM @Inject constructor(
@@ -35,6 +42,7 @@ class InternalDataVM @Inject constructor(
             else -> {}
         }
         _internalUiState.update { it.copy(measuring = false) }
+        Log.d(TAG, "Stream stopped.")
     }
 
 
@@ -49,6 +57,12 @@ class InternalDataVM @Inject constructor(
         internalSensorController.startImuStream()
         streamType = StreamType.SINGLE
         _internalUiState.update { it.copy(measuring = true) }
+        if (_internalUiState.value.selectedNumber < MAX_TIMER) {
+            viewModelScope.launch {
+                delay((_internalUiState.value.selectedNumber * 1000).toLong())
+                stopDataStream()
+            }
+        }
     }
 
     fun setSingleMeasurement() {
@@ -72,5 +86,5 @@ class InternalDataVM @Inject constructor(
 data class InternalDataUiState(
     val measuring: Boolean = false,
     val dualMeasurement: Boolean = false,
-    val selectedNumber: Float = 1f
+    val selectedNumber: Float = 10f
 )

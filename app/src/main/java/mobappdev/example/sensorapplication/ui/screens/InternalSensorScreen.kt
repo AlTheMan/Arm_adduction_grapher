@@ -32,13 +32,15 @@ fun InternalSensorScreen(vm: InternalDataVM) {
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        NumberPickerSlider(range = 1..31, selectedNumber = state.selectedNumber, onNumberSelected = vm::setTimerValue)
+
         Text(
             text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
             fontSize = 54.sp,
             color = Color.Black,
         )
         Spacer(modifier = Modifier.height(200.dp))
+        NumberPickerSlider(range = 10..31, selectedNumber = state.selectedNumber, onNumberSelected = vm::setTimerValue)
+
         if (state.measuring) {
             CardButton(
                 buttonText = "Stop",
