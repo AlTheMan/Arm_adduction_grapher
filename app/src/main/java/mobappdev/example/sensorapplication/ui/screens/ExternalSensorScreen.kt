@@ -20,11 +20,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.components.BluetoothSearchDialog
 import mobappdev.example.sensorapplication.ui.components.CardButton
 import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
-import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExternalSensorScreen(vm: DataVM) {
+fun ExternalSensorScreen(vm: ExternalDataVM) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
     val deviceList by vm.deviceList.collectAsState()
