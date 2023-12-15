@@ -124,9 +124,8 @@ class AndroidPolarController(
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
-    private var gyroCool: PolarGyroData.PolarGyroDataSample? =null
-    private var accCool: PolarAccelerometerData.PolarAccelerometerDataSample? = null
-    private var hasAddedMeasurment: Boolean = false
+    private var gyroQueueUnprocessed: ArrayDeque<PolarGyroData.PolarGyroDataSample> = ArrayDeque()
+    private var accQueueUnprocessed: ArrayDeque<PolarAccelerometerData.PolarAccelerometerDataSample> =ArrayDeque()
 
     init {
         api.setPolarFilter(true)
@@ -363,12 +362,10 @@ class AndroidPolarController(
                 .flatMap { settings ->
                     api.startAccStreaming(deviceId, settings)
                 }
-
             val gyrStream = requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.GYRO)
                 .flatMap { settings ->
                     api.startGyroStreaming(deviceId, settings)
                 }
-
             val combinedStream = Flowable.merge(accStream, gyrStream)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -376,46 +373,20 @@ class AndroidPolarController(
                         when (data) {
                             is PolarAccelerometerData -> {
                                 // Handle accelerometer data
+                                Log.d(TAG,"ACC inside")
                                 for (data in data.samples) {
-                                    val angleMeasurements= AngleMeasurements.measurment (
-                                        calculationModel.getLinearAccelerationAngle(
-                                            Triple(
-                                                data.x.toFloat(),
-                                                data.y.toFloat(),
-                                                data.z.toFloat()
-                                            )
-                                        ), data.timeStamp)
-                                    updateAngleValues(angleMeasurements)
-                                    Log.d(
-                                        TAG,
-                                        "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                                    )
-                                    Log.d(
-                                        TAG,
-                                        "ACC angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString()
-                                    )
+                                    accQueueUnprocessed.add(data)
+                                    Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                                 }
-
                             }
                             is PolarGyroData -> {
-                                for (data in data.samples) {
-                                    _gyrCurrent.update { data }
-                                    Log.d(
-                                        TAG,
-                                        "GYR degrees: " + calculationModel.getLinearAccelerationAngle(
-                                            Triple(data.x, data.y, data.z)
-                                        ).toString()
-                                    )
-                                    _gyrList.update { currentData ->
-                                        val newSamples = currentData?.samples.orEmpty() + data
-                                        PolarGyroData(newSamples, data.timeStamp)
-                                    }
-                                    Log.d(
-                                        TAG,
-                                        "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                                    )
-                                }
+                                Log.d(TAG,"GYR inside")
                                 // Handle gyroscope data
+                                for (data in data.samples) {
+                                    gyroQueueUnprocessed.add(data)
+                                    Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                                }
+                                retreiveAnglesFromQueues()
                             }
                         }
                     },
@@ -435,47 +406,31 @@ class AndroidPolarController(
         }
     }
 
+    private fun retreiveAnglesFromQueues(){
+        while (accQueueUnprocessed.isNotEmpty() && gyroQueueUnprocessed.isNotEmpty()) {
+            val acc = accQueueUnprocessed.removeFirst()
+            val gyro = gyroQueueUnprocessed.removeFirst()
 
-
-    fun startAccAndGyroStream2(deviceId: String) {
-        val isDisposed = gyrDisposable?.isDisposed ?: true
-        if (isDisposed) {
-            gyrDisposable =
-                requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.GYRO)
-                    .flatMap { settings: PolarSensorSetting ->
-                        api.startGyroStreaming(deviceId, settings)
-                    }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        { polarGyroData: PolarGyroData ->
-                            for (data in polarGyroData.samples) {
-                                _gyrCurrent.update { data }
-                                Log.d(
-                                    TAG,
-                                    "ACC degrees: " + calculationModel.getLinearAccelerationAngle(
-                                        Triple(data.x, data.y, data.z)
-                                    ).toString()
-                                )
-                                _gyrList.update { currentData ->
-                                    val newSamples = currentData?.samples.orEmpty() + data
-                                    PolarGyroData(newSamples, data.timeStamp)
-                                }
-                                Log.d(
-                                    TAG,
-                                    "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                                )
-                            }
-                        },
-                        { error: Throwable ->
-                            Log.e(TAG, "GYR stream failed. Reason $error")
-                        },
-                        { Log.d(TAG, "GYR stream complete") }
+            val angleMeasurements= AngleMeasurements.measurment (
+                calculationModel.getLinearAccelerationAngleWithGyroFilter(
+                    Triple(
+                        acc.x.toFloat(),
+                        acc.y.toFloat(),
+                        acc.z.toFloat()
+                    ),
+                    Triple(
+                        gyro.x,
+                        gyro.y,
+                        gyro.z
                     )
-        } else {
-            // NOTE dispose will stop streaming if it is "running"
-            gyrDisposable?.dispose()
+                ), acc.timeStamp)
+            updateAngleValues(angleMeasurements)
+            Log.d(TAG, "ACC&GYRO angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
         }
     }
+
+
+
 
     override fun stopAccAndGyroStreaming() {
         _measuring.update { false }
