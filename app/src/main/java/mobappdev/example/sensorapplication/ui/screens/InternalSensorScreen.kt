@@ -1,5 +1,6 @@
 package mobappdev.example.sensorapplication.ui.screens
 
+import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,8 +39,22 @@ fun InternalSensorScreen(vm: InternalDataVM) {
             fontSize = 54.sp,
             color = Color.Black,
         )
+
+
+
         Spacer(modifier = Modifier.height(200.dp))
-        NumberPickerSlider(range = 10..31, selectedNumber = state.selectedNumber, onNumberSelected = vm::setTimerValue)
+
+        if (state.measuring) {
+            Text(
+                text = state.countDownTimer.toString(),
+                fontSize = 54.sp,
+                color = Color.Black,
+            )
+            Spacer(modifier = Modifier.height(100.dp))
+        }
+        else  {
+            NumberPickerSlider(range = 10..31, selectedNumber = state.selectedTimerValue, onNumberSelected = vm::setTimerValue)
+        }
 
         if (state.measuring) {
             CardButton(
@@ -71,7 +86,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
                 buttonText = "Start",
                 enabled = true,
                 cardHeight = 100.dp,
-                onButtonClick = if (state.dualMeasurement) vm::startAccAndGyro else vm::startAcc,
+                onButtonClick = vm::startMeasurement
             )
         }
     }
