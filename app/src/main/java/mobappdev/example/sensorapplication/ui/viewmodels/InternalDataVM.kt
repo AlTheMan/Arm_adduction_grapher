@@ -3,10 +3,12 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import javax.inject.Inject
 
@@ -49,42 +51,53 @@ class InternalDataVM @Inject constructor(
 
     fun startMeasurement(){
         if (_internalUiState.value.dualMeasurement) {
+            Log.d(TAG, "DUAL")
             startAccAndGyro()
         } else {
+            Log.d(TAG, "SINGLE")
             startAcc()
         }
         if (_internalUiState.value.selectedTimerValue < MAX_TIMER) {
+            Log.e(TAG, "Here3")
             startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * 1000)
         }
     }
 
 
     private fun startAccAndGyro() {
-        internalSensorController.startGyroStream()
-        internalSensorController.startImuStream()
-        streamType = StreamType.DUAL
-        _internalUiState.update { it.copy(measuring = true) }
+        viewModelScope.launch {
+            internalSensorController.startDualStream()
+            streamType = StreamType.DUAL
+            _internalUiState.update { it.copy(measuring = true) }
+        }
     }
 
     private fun startAcc() {
-        internalSensorController.startImuStream()
-        streamType = StreamType.SINGLE
-        _internalUiState.update { it.copy(measuring = true) }
+        viewModelScope.launch {
+            internalSensorController.startImuStream()
+            streamType = StreamType.SINGLE
+            _internalUiState.update { it.copy(measuring = true) }
+        }
+
     }
 
     private fun startCountdownTimer(totalTime: Long) {
-        countDownTimer = object : CountDownTimer(totalTime, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                println("Seconds remaining: ${millisUntilFinished / 1000}")
-                _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / 1000).toInt()) }
-            }
+        viewModelScope.launch {
+            countDownTimer = object : CountDownTimer(totalTime, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    println("Seconds remaining: ${millisUntilFinished / 1000}")
+                    _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / 1000).toInt()) }
+                }
 
-            override fun onFinish() {
-                stopDataStream()
-                println("Timer finished")
+                override fun onFinish() {
+                    stopDataStream()
+                    println("Timer finished")
+                }
             }
+            countDownTimer?.start()
+            Log.e(TAG, "Here4")
         }
-        countDownTimer?.start()
+
     }
 
     private fun cancelTimer(){

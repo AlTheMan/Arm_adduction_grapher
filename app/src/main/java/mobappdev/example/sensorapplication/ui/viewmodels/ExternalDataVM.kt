@@ -9,6 +9,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
+import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +32,7 @@ private const val LOG_TAG = "DataVM"
 class ExternalDataVM @Inject constructor(
     private val polarController: PolarController,
 ) : ViewModel() {
+    private var countDownTimer: CountDownTimer? = null
     val angleCurrentExternal = polarController.angleMeasurementCurrent
     private val _deviceList = MutableStateFlow<List<PolarDeviceInfo>>(listOf())
     val deviceList: StateFlow<List<PolarDeviceInfo>>
@@ -66,6 +68,7 @@ class ExternalDataVM @Inject constructor(
         connectToSensor()
         closeBluetoothDialog()
     }
+
     fun disconnectFromSensor() {
         stopDataStream()
         polarController.disconnectFromDevice(_deviceId.value)
@@ -102,8 +105,6 @@ class ExternalDataVM @Inject constructor(
         }
         _state.update { it.copy(measuring = false) }
     }
-
-
     private fun deviceInList(polarDeviceInfo: PolarDeviceInfo): Boolean {
         for (element in _deviceList.value) {
             if (polarDeviceInfo.deviceId == element.deviceId) {
@@ -141,13 +142,33 @@ class ExternalDataVM @Inject constructor(
         _state.value = state.value.copy(dualMeasurement = true)
     }
 
+    private fun startCountdownTimer(totalTime: Long) {
+        countDownTimer = object : CountDownTimer(totalTime, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                println("Seconds remaining: ${millisUntilFinished / 1000}")
+                _state.update { it.copy(countdownTimer = (millisUntilFinished / 1000).toInt()) }
+            }
+
+            override fun onFinish() {
+                stopDataStream()
+                println("Timer finished")
+            }
+        }
+        countDownTimer?.start()
+    }
+
+    private fun cancelTimer(){
+        countDownTimer?.cancel()
+        countDownTimer = null
+    }
+
     init {
         viewModelScope.launch {
             polarController.foundDevices.collect {
-                    if (!deviceInList(it)) {
-                        _deviceList.value = (_deviceList.value + it).toMutableList()
-                    }
+                if (!deviceInList(it)) {
+                    _deviceList.value = (_deviceList.value + it).toMutableList()
                 }
+            }
         }
     }
 }
@@ -157,7 +178,8 @@ data class DataUiState(
     val measuring: Boolean = false,
     val showDialog: Boolean = false,
     val isSearching: Boolean = false,
-    val dualMeasurement: Boolean = false
+    val dualMeasurement: Boolean = false,
+    val countdownTimer: Int = 10
 )
 
 private enum class StreamType {

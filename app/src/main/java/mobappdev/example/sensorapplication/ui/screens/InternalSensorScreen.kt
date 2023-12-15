@@ -1,6 +1,5 @@
 package mobappdev.example.sensorapplication.ui.screens
 
-import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,16 +43,20 @@ fun InternalSensorScreen(vm: InternalDataVM) {
 
         Spacer(modifier = Modifier.height(200.dp))
 
-        if (state.measuring) {
+        if (state.measuring && state.countDownTimer < 31) {
             Text(
                 text = state.countDownTimer.toString(),
                 fontSize = 54.sp,
                 color = Color.Black,
             )
             Spacer(modifier = Modifier.height(100.dp))
-        }
-        else  {
-            NumberPickerSlider(range = 10..31, selectedNumber = state.selectedTimerValue, onNumberSelected = vm::setTimerValue)
+
+        } else if (!state.measuring) {
+            NumberPickerSlider(
+                range = 10..31,
+                selectedNumber = state.selectedTimerValue,
+                onNumberSelected = vm::setTimerValue
+            )
         }
 
         if (state.measuring) {
