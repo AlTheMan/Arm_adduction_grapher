@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.data.AngleMeasurements
 import mobappdev.example.sensorapplication.domain.InternalSensorController
-import java.util.LinkedList
 import javax.inject.Inject
 import kotlin.math.ceil
 
@@ -27,7 +26,12 @@ class InternalDataVM @Inject constructor(
 
     private var countDownTimer: CountDownTimer? = null
 
-    val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
+   // val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
+
+    private val _currentAngle = MutableStateFlow<AngleMeasurements.Measurement>(
+        value = AngleMeasurements.Measurement(0F, -1L)
+    )
+    val currentAngle: StateFlow<AngleMeasurements.Measurement> = _currentAngle
 
     private val _internalUiState = MutableStateFlow(InternalDataUiState())
     val internalUiState: StateFlow<InternalDataUiState> = _internalUiState
@@ -180,6 +184,7 @@ class InternalDataVM @Inject constructor(
             }
                 .collect {
                     if (it != null) {
+                        _currentAngle.value = it
                         addToOffsets(it)
                     }
                 }
