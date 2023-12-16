@@ -19,6 +19,7 @@ import mobappdev.example.sensorapplication.ui.components.AngleCanvas
 import mobappdev.example.sensorapplication.ui.components.CardButton
 import mobappdev.example.sensorapplication.ui.components.NumberPickerSlider
 import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
+import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
@@ -45,7 +46,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
         AngleCanvas(modifier = Modifier, setDimensions = vm::setCanvasDimension, offsets = offsets)
         Spacer(modifier = Modifier.height(50.dp))
 
-        if (state.measuring && state.countDownTimer < 31) {
+        if (state.measuring && state.countDownTimer < TimerValues.MAX_TIMER) {
             Text(
                 text = state.countDownTimer.toString(),
                 fontSize = 54.sp,
@@ -55,7 +56,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
 
         } else if (!state.measuring) {
             NumberPickerSlider(
-                range = 10..31,
+                range = TimerValues.MIN_TIMER..TimerValues.MAX_TIMER,
                 selectedNumber = state.selectedTimerValue,
                 onNumberSelected = vm::setTimerValue
             )
