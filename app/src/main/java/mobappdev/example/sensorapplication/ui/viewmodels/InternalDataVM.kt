@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.data.AngleMeasurements
 import mobappdev.example.sensorapplication.domain.InternalSensorController
-import java.util.LinkedList
+import mobappdev.example.sensorapplication.ui.shared.Canvas
+import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import javax.inject.Inject
-import kotlin.math.ceil
 
 private const val MAX_TIMER = 31
 private const val TAG = "InternalDataVM"
@@ -27,7 +27,12 @@ class InternalDataVM @Inject constructor(
 
     private var countDownTimer: CountDownTimer? = null
 
-    val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
+   // val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
+
+    private val _currentAngle = MutableStateFlow(
+        value = AngleMeasurements.Measurement(0F, -1L)
+    )
+    val currentAngle: StateFlow<AngleMeasurements.Measurement> = _currentAngle
 
     private val _internalUiState = MutableStateFlow(InternalDataUiState())
     val internalUiState: StateFlow<InternalDataUiState> = _internalUiState
@@ -35,7 +40,6 @@ class InternalDataVM @Inject constructor(
     private var streamType: StreamType? = null
 
     private val _offsets = MutableStateFlow<List<Offset>>(emptyList())
-    private var removeFromList: Boolean = false;
     val offsets: StateFlow<List<Offset>> = _offsets
 
 
@@ -60,9 +64,7 @@ class InternalDataVM @Inject constructor(
     }
 
     fun startMeasurement() {
-        removeFromList = false
         _internalUiState.update { it.copy(startTime = -1L) }
-        _offsets.value = emptyList()
         if (_internalUiState.value.dualMeasurement) {
             Log.d(TAG, "DUAL")
             startAccAndGyro()
@@ -71,7 +73,6 @@ class InternalDataVM @Inject constructor(
             startAcc()
         }
         if (_internalUiState.value.selectedTimerValue < MAX_TIMER) {
-            Log.e(TAG, "Here3")
             startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * 1000)
         }
     }
@@ -96,10 +97,10 @@ class InternalDataVM @Inject constructor(
 
     private fun startCountdownTimer(totalTime: Long) {
         viewModelScope.launch {
-            countDownTimer = object : CountDownTimer(totalTime, 1000) {
+            countDownTimer = object : CountDownTimer(totalTime, TimerValues.COUNTDOWN_INTERVAL.toLong()) {
                 override fun onTick(millisUntilFinished: Long) {
-                    println("Seconds remaining: ${millisUntilFinished / 1000}")
-                    _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / 1000).toInt()) }
+                    println("Seconds remaining: ${millisUntilFinished / TimerValues.COUNTDOWN_INTERVAL}")
+                    _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / TimerValues.COUNTDOWN_INTERVAL).toInt()) }
                 }
 
                 override fun onFinish() {
@@ -113,37 +114,19 @@ class InternalDataVM @Inject constructor(
     }
 
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
-        val yValue = (_internalUiState.value.canvasHeight / 2) + measurement.angle * 3
-        val xValue = convertTimestampToX(measurement.timestamp)
-        _offsets.value = _offsets.value + Offset(xValue, yValue)
-        Log.d(
-            TAG,
-            "List size: " + _offsets.value.size.toString() + "| X: " + String.format(
-                "%.1f",
-                xValue
-            ) + "| Y: " + yValue
-        )
-    }
-
-    private fun convertTimestampToX(timestamp: Long): Float {
-        val divider = (1000000 * _internalUiState.value.selectedTimerValue)
-        if (_internalUiState.value.startTime < 0) {
-            _internalUiState.update { it.copy(startTime = timestamp) }
-            Log.d(TAG, "First timetamp is: " + timestamp + "," + _internalUiState.value.startTime)
-        }
-
-        val xVal = (timestamp - _internalUiState.value.startTime).toFloat() / divider
-        if (xVal > _internalUiState.value.canvasWidth) {
+        val yValue = Canvas.convertAngleToY(_internalUiState.value.canvasHeight, measurement.angle) // Canvas is 1000, start at 500 (middle), multiply angle to fill space
+        val xValue = Canvas.convertTimestampToX(measurement.timestamp, _internalUiState.value.selectedTimerValue, _internalUiState.value.startTime)
+        if (xValue >= _internalUiState.value.canvasWidth || xValue < 0) {
             _offsets.value = emptyList()
-            _internalUiState.update { it.copy(startTime = timestamp) }
-
+            _internalUiState.update { it.copy(startTime = measurement.timestamp) }
+        } else {
+            _offsets.value = _offsets.value + Offset(xValue, yValue)
         }
-
-
-        return ceil((timestamp - _internalUiState.value.startTime).toFloat() / divider)
+        Log.d(TAG, "List size: " + _offsets.value.size.toString() + "| X: " + String.format("%.1f",xValue) + "| Y: " + yValue)
     }
 
-    private fun cancelTimer() {
+
+     private fun cancelTimer() {
         countDownTimer?.cancel()
         countDownTimer = null
     }
@@ -180,6 +163,7 @@ class InternalDataVM @Inject constructor(
             }
                 .collect {
                     if (it != null) {
+                        _currentAngle.value = it
                         addToOffsets(it)
                     }
                 }
@@ -191,8 +175,8 @@ class InternalDataVM @Inject constructor(
 data class InternalDataUiState(
     val measuring: Boolean = false,
     val dualMeasurement: Boolean = false,
-    val selectedTimerValue: Float = 10f,
-    val countDownTimer: Int = 10,
+    val selectedTimerValue: Float = TimerValues.MIN_TIMER.toFloat(),
+    val countDownTimer: Int = TimerValues.MIN_TIMER,
     val startTime: Long = -1L,
     val canvasWidth: Float = 1000F,
     val canvasHeight: Float = 1000F

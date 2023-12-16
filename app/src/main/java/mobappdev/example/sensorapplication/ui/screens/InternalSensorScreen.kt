@@ -1,18 +1,11 @@
 package mobappdev.example.sensorapplication.ui.screens
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,13 +13,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PointMode
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mobappdev.example.sensorapplication.ui.components.AngleCanvas
 import mobappdev.example.sensorapplication.ui.components.CardButton
 import mobappdev.example.sensorapplication.ui.components.NumberPickerSlider
 import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
+import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
@@ -34,7 +27,7 @@ import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 fun InternalSensorScreen(vm: InternalDataVM) {
 
     val state by vm.internalUiState.collectAsState()
-    val angle by vm.angleCurrentInternal.collectAsState()
+    val angle by vm.currentAngle.collectAsState()
     val offsets by vm.offsets.collectAsState()
 
 
@@ -45,48 +38,15 @@ fun InternalSensorScreen(vm: InternalDataVM) {
     ) {
 
         Text(
-            text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
+            text = if (state.measuring) String.format("%.1f", angle.angle) else "-",
             fontSize = 54.sp,
             color = Color.Black,
         )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(13.dp)
-                .border(2.dp, Color.Black),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    vm.setCanvasDimension(size.width, size.height)
-                    drawPoints(
-                        points = offsets,
-                        pointMode = PointMode.Polygon,
-                        color = Color.Blue,
-                        strokeWidth = 4.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-
-
-                }
-            }
-
-        }
-
-
-
-
-
+        AngleCanvas(modifier = Modifier, setDimensions = vm::setCanvasDimension, offsets = offsets)
         Spacer(modifier = Modifier.height(50.dp))
 
-        if (state.measuring && state.countDownTimer < 31) {
+        if (state.measuring && state.countDownTimer < TimerValues.MAX_TIMER) {
             Text(
                 text = state.countDownTimer.toString(),
                 fontSize = 54.sp,
@@ -96,7 +56,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
 
         } else if (!state.measuring) {
             NumberPickerSlider(
-                range = 10..31,
+                range = TimerValues.MIN_TIMER..TimerValues.MAX_TIMER,
                 selectedNumber = state.selectedTimerValue,
                 onNumberSelected = vm::setTimerValue
             )
