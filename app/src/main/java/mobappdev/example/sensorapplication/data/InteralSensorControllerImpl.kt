@@ -28,6 +28,7 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import javax.inject.Inject
 
 private const val LOG_TAG = "InternalSensorController"
+private const val UPDATE_DELAY = 5L
 
 class InternalSensorControllerImpl @Inject constructor(
     context: Context,
@@ -92,7 +93,7 @@ class InternalSensorControllerImpl @Inject constructor(
         GlobalScope.launch(Dispatchers.Main) {
             _streamingLinAcc.value = true
             while (_streamingLinAcc.value) {
-                delay(5)
+                delay(UPDATE_DELAY)
                 if (_currentLinAcc != null) {  //TODO: Om appen hänger sig, ta bort denna. Detta är ett test
                     val angle = calculationModel.getLinearAccelerationAngle(_currentLinAcc!!.axisValues)
                     val angleWithTimestamp =
@@ -134,7 +135,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _streamingGyro.value = true
             _streamingLinAcc.value = true
             while (_streamingLinAcc.value && _streamingGyro.value) {
-                delay(100)
+                delay(UPDATE_DELAY)
                 val angle = calculationModel.getLinearAccelerationAngleWithGyroFilter(
                     _currentLinAcc!!.axisValues, _currentGyro!!.axisValues
                 )

@@ -3,6 +3,7 @@ package mobappdev.example.sensorapplication.data
 import com.polar.sdk.api.model.PolarSensorSetting
 import com.polar.sdk.api.model.PolarSensorSetting.SettingType
 import io.reactivex.rxjava3.core.Single
+import java.util.Collections
 import java.util.EnumMap
 
 object SettingsUtility {
@@ -13,7 +14,10 @@ object SettingsUtility {
     ): Single<PolarSensorSetting> {
         return Single.create { emitter ->
             try {
-                val selectedSettings = getDefaultSettings(available)
+                // Select settings based on available and all maps
+                val selectedSettings = getDefaultSettings(available) // Or some other logic to select settings
+
+                // Create and emit PolarSensorSetting with the selected settings
                 emitter.onSuccess(PolarSensorSetting(selectedSettings))
             } catch (e: Exception) {
                 emitter.tryOnError(e)
@@ -32,6 +36,16 @@ object SettingsUtility {
         }
         return defaultSettings
     }
+
+    private fun getMaxSettings(availableSettings: Map<SettingType, Set<Int>>): MutableMap<SettingType, Int> {
+        val maxSettings = EnumMap<SettingType, Int>(SettingType::class.java)
+        availableSettings.forEach { (type, settings) ->
+            maxSettings[type] = settings.maxOrNull() ?: 0
+        }
+        return maxSettings
+    }
+
+
 
 
     /*

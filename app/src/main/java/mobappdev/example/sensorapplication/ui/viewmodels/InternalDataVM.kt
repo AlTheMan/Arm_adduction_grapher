@@ -72,9 +72,6 @@ class InternalDataVM @Inject constructor(
             Log.d(TAG, "SINGLE")
             startAcc()
         }
-        if (_internalUiState.value.selectedTimerValue < MAX_TIMER) {
-            startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * 1000)
-        }
     }
 
 
@@ -114,6 +111,9 @@ class InternalDataVM @Inject constructor(
     }
 
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
+        if (countDownTimer == null && _internalUiState.value.selectedTimerValue < TimerValues.MAX_TIMER) {
+            startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * TimerValues.COUNTDOWN_INTERVAL)
+        }
         val yValue = Canvas.convertAngleToY(_internalUiState.value.canvasHeight, measurement.angle) // Canvas is 1000, start at 500 (middle), multiply angle to fill space
         val xValue = Canvas.convertTimestampToX(measurement.timestamp, _internalUiState.value.selectedTimerValue, _internalUiState.value.startTime)
         if (xValue >= _internalUiState.value.canvasWidth || xValue < 0) {
