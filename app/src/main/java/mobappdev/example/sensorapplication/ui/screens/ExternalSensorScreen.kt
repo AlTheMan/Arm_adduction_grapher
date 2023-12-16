@@ -17,9 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mobappdev.example.sensorapplication.ui.components.AngleCanvas
 import mobappdev.example.sensorapplication.ui.components.BluetoothSearchDialog
 import mobappdev.example.sensorapplication.ui.components.CardButton
+import mobappdev.example.sensorapplication.ui.components.NumberPickerSlider
 import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
+import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +31,8 @@ fun ExternalSensorScreen(vm: ExternalDataVM) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
     val deviceList by vm.deviceList.collectAsState()
-    val angle by vm.angleCurrentExternal.collectAsState()
+    val angle by vm.currentAngle.collectAsState()
+    val offsets by vm.offsets.collectAsState()
     
     Row {
         if (!state.connected)
@@ -57,11 +61,29 @@ fun ExternalSensorScreen(vm: ExternalDataVM) {
             BluetoothSearchDialog(devices = deviceList, onCardClicked = vm::chooseSensorAndConnect, closeDialog = vm::closeBluetoothDialog)
         }
         Text(
-            text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
+            text = if (state.measuring) String.format("%.1f", angle.angle) else "-",
             fontSize = 54.sp,
             color = Color.Black,
         )
-        Spacer(modifier = Modifier.height(200.dp))
+        AngleCanvas(modifier = Modifier, setDimensions = vm::setCanvasDimension, offsets = offsets)
+        Spacer(modifier = Modifier.height(50.dp))
+        if (state.measuring && state.countDownTimer < TimerValues.MAX_TIMER) {
+            Text(
+                text = state.countDownTimer.toString(),
+                fontSize = 54.sp,
+                color = Color.Black,
+            )
+            Spacer(modifier = Modifier.height(48.dp))
+
+        } else if (!state.measuring) {
+            NumberPickerSlider(
+                range = TimerValues.MIN_TIMER..TimerValues.MAX_TIMER,
+                selectedNumber = state.selectedTimerValue,
+                onNumberSelected = vm::setTimerValue
+            )
+        } else {
+            Spacer(modifier = Modifier.height(120.dp))
+        }
         if (state.measuring) {
             CardButton(
                 buttonText = "Stop",
@@ -87,7 +109,7 @@ fun ExternalSensorScreen(vm: ExternalDataVM) {
                 buttonText = "Start",
                 enabled = state.connected,
                 cardHeight = 100.dp,
-                onButtonClick = if (state.dualMeasurement) vm::startExtAccAndGyro else vm::startExtAcc,
+                onButtonClick = vm::startMeasurement
             )
         }
     }

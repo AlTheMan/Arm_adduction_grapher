@@ -5,6 +5,6 @@ data class AngleMeasurements(
 ){
     data class Measurement(
         var angle: Float = 0f,
-        var timestamp: Long =0
+        var timestamp: Long = -1
     )
 }
