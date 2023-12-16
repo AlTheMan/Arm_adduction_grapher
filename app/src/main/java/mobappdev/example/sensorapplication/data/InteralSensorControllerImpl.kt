@@ -134,7 +134,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _streamingGyro.value = true
             _streamingLinAcc.value = true
             while (_streamingLinAcc.value && _streamingGyro.value) {
-                delay(10)
+                delay(100)
                 val angle = calculationModel.getLinearAccelerationAngleWithGyroFilter(
                     _currentLinAcc!!.axisValues, _currentGyro!!.axisValues
                 )
