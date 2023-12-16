@@ -2,15 +2,20 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 
 import android.os.CountDownTimer
 import android.util.Log
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mobappdev.example.sensorapplication.data.AngleMeasurements
 import mobappdev.example.sensorapplication.domain.InternalSensorController
+import java.util.LinkedList
 import javax.inject.Inject
+import kotlin.math.ceil
 
 private const val MAX_TIMER = 31
 private const val TAG = "InternalDataVM"
@@ -21,12 +26,17 @@ class InternalDataVM @Inject constructor(
 ) : ViewModel() {
 
     private var countDownTimer: CountDownTimer? = null
+
     val angleCurrentInternal = internalSensorController.angleMeasurementCurrent
 
     private val _internalUiState = MutableStateFlow(InternalDataUiState())
     val internalUiState: StateFlow<InternalDataUiState> = _internalUiState
 
     private var streamType: StreamType? = null
+
+    private val _offsets = MutableStateFlow<List<Offset>>(emptyList())
+    private var removeFromList: Boolean = false;
+    val offsets: StateFlow<List<Offset>> = _offsets
 
 
     fun stopDataStream() {
@@ -49,7 +59,10 @@ class InternalDataVM @Inject constructor(
         Log.d(TAG, "Stream stopped.")
     }
 
-    fun startMeasurement(){
+    fun startMeasurement() {
+        removeFromList = false
+        _internalUiState.update { it.copy(startTime = -1L) }
+        _offsets.value = emptyList()
         if (_internalUiState.value.dualMeasurement) {
             Log.d(TAG, "DUAL")
             startAccAndGyro()
@@ -95,12 +108,42 @@ class InternalDataVM @Inject constructor(
                 }
             }
             countDownTimer?.start()
-            Log.e(TAG, "Here4")
         }
 
     }
 
-    private fun cancelTimer(){
+    private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
+        val yValue = (_internalUiState.value.canvasHeight / 2) + measurement.angle * 3
+        val xValue = convertTimestampToX(measurement.timestamp)
+        _offsets.value = _offsets.value + Offset(xValue, yValue)
+        Log.d(
+            TAG,
+            "List size: " + _offsets.value.size.toString() + "| X: " + String.format(
+                "%.1f",
+                xValue
+            ) + "| Y: " + yValue
+        )
+    }
+
+    private fun convertTimestampToX(timestamp: Long): Float {
+        val divider = (1000000 * _internalUiState.value.selectedTimerValue)
+        if (_internalUiState.value.startTime < 0) {
+            _internalUiState.update { it.copy(startTime = timestamp) }
+            Log.d(TAG, "First timetamp is: " + timestamp + "," + _internalUiState.value.startTime)
+        }
+
+        val xVal = (timestamp - _internalUiState.value.startTime).toFloat() / divider
+        if (xVal > _internalUiState.value.canvasWidth) {
+            _offsets.value = emptyList()
+            _internalUiState.update { it.copy(startTime = timestamp) }
+
+        }
+
+
+        return ceil((timestamp - _internalUiState.value.startTime).toFloat() / divider)
+    }
+
+    private fun cancelTimer() {
         countDownTimer?.cancel()
         countDownTimer = null
     }
@@ -114,11 +157,33 @@ class InternalDataVM @Inject constructor(
     }
 
     fun setTimerValue(value: Float) {
-        _internalUiState.update { it.copy(selectedTimerValue = value, countDownTimer = value.toInt()) }
+        _internalUiState.update {
+            it.copy(
+                selectedTimerValue = value,
+                countDownTimer = value.toInt()
+            )
+        }
+    }
+
+    fun setCanvasDimension(canvasWidth: Float, canvasHeight: Float) {
+        _internalUiState.update { it.copy(canvasWidth = canvasWidth, canvasHeight = canvasHeight) }
     }
 
     private enum class StreamType {
         SINGLE, DUAL
+    }
+
+    init {
+        viewModelScope.launch {
+            internalSensorController.angleMeasurementCurrent.distinctUntilChangedBy {
+                it?.timestamp
+            }
+                .collect {
+                    if (it != null) {
+                        addToOffsets(it)
+                    }
+                }
+        }
     }
 
 }
@@ -127,5 +192,8 @@ data class InternalDataUiState(
     val measuring: Boolean = false,
     val dualMeasurement: Boolean = false,
     val selectedTimerValue: Float = 10f,
-    val countDownTimer: Int = 10
+    val countDownTimer: Int = 10,
+    val startTime: Long = -1L,
+    val canvasWidth: Float = 1000F,
+    val canvasHeight: Float = 1000F
 )
