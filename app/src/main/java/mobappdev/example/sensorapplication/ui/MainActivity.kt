@@ -47,6 +47,8 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 29)
         }
 
+
+
         setContent {
             SensorapplicationTheme {
                 val externalDataVM = hiltViewModel<ExternalDataVM>()
@@ -88,4 +90,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+
+
 }
+
+
