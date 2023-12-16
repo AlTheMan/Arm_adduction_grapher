@@ -92,7 +92,7 @@ class InternalSensorControllerImpl @Inject constructor(
         GlobalScope.launch(Dispatchers.Main) {
             _streamingLinAcc.value = true
             while (_streamingLinAcc.value) {
-                delay(10)
+                delay(5)
                 if (_currentLinAcc != null) {  //TODO: Om appen hänger sig, ta bort denna. Detta är ett test
                     val angle = calculationModel.getLinearAccelerationAngle(_currentLinAcc!!.axisValues)
                     val angleWithTimestamp =

@@ -2,6 +2,7 @@ package mobappdev.example.sensorapplication.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
@@ -35,6 +37,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
     val angle by vm.angleCurrentInternal.collectAsState()
     val offsets by vm.offsets.collectAsState()
 
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Bottom,
@@ -50,25 +53,31 @@ fun InternalSensorScreen(vm: InternalDataVM) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp),
+                .height(300.dp)
+                .padding(13.dp)
+                .border(2.dp, Color.Black),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface {
-                Canvas(modifier = Modifier.fillMaxSize(0.9f).background(color = Color.LightGray)) {
-                    val canvasWidth = size.width
-                    val canvasHeight = size.height
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    vm.setCanvasDimension(size.width, size.height)
                     drawPoints(
                         points = offsets,
-                        pointMode = PointMode.Lines,
+                        pointMode = PointMode.Polygon,
                         color = Color.Blue,
-                        strokeWidth = 5.dp.toPx(),
+                        strokeWidth = 4.dp.toPx(),
                         cap = StrokeCap.Round
                     )
 
 
                 }
             }
+
         }
 
 
@@ -83,7 +92,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
                 fontSize = 54.sp,
                 color = Color.Black,
             )
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
         } else if (!state.measuring) {
             NumberPickerSlider(
@@ -91,6 +100,8 @@ fun InternalSensorScreen(vm: InternalDataVM) {
                 selectedNumber = state.selectedTimerValue,
                 onNumberSelected = vm::setTimerValue
             )
+        } else {
+            Spacer(modifier = Modifier.height(120.dp))
         }
 
         if (state.measuring) {
