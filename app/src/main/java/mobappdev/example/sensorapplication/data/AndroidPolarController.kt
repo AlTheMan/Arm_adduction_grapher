@@ -128,8 +128,8 @@ class AndroidPolarController(
     private var accQueueUnprocessed: ArrayDeque<PolarAccelerometerData.PolarAccelerometerDataSample> =
         ArrayDeque()
 
-    private var updateQueue: ArrayDeque<AngleMeasurements.Measurement> = ArrayDeque()
-    private var _accStreaming = false
+    //private var updateQueue: ArrayDeque<AngleMeasurements.Measurement> = ArrayDeque()
+    //private var _accStreaming = false
 
     init {
         api.setPolarFilter(true)
@@ -204,25 +204,20 @@ class AndroidPolarController(
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         val isDisposed = scanDisposable?.isDisposed ?: true
         if (isDisposed) {
-            Log.d(TAG, "Searching")
-            //toggleButtonDown(scanButton, R.string.scanning_devices)
             scanDisposable = api.searchForDevice().observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ polarDeviceInfo: PolarDeviceInfo ->
+                    Log.d(TAG, "Searching for devices")
                     coroutineScope.launch {
                         _foundDevices.emit(polarDeviceInfo).also {
                             Log.d(TAG, "Emitting device: ${polarDeviceInfo.deviceId}")
                         }
                     }
                 }, { error: Throwable ->
-                    //toggleButtonUp(scanButton, "Scan devices")
                     Log.e(TAG, "Device scan failed. Reason $error")
                 }, {
-                    //toggleButtonUp(scanButton, "Scan devices")
                     Log.d(TAG, "complete")
                 })
-            Log.d(TAG, "Searching3")
         } else {
-            //toggleButtonUp(scanButton, "Scan devices")
             Log.d(TAG, "Disposing")
             scanDisposable?.dispose()
             Log.d(TAG, "scanDisposable is disposed: " + scanDisposable?.isDisposed.toString())
@@ -231,14 +226,6 @@ class AndroidPolarController(
         return true
     }
 
-
-    /*Log.d(TAG, "polar device found id: " +
-                               polarDeviceInfo.deviceId + " address: " +
-                               polarDeviceInfo.address + " rssi: " +
-                               polarDeviceInfo.rssi + " name: " +
-                               polarDeviceInfo.name + " isConnectable: " +
-                               polarDeviceInfo.isConnectable)*/
-
     override fun stopHrStreaming() {
         _measuring.update { false }
         hrDisposable?.dispose()
@@ -246,11 +233,8 @@ class AndroidPolarController(
     }
 
     override fun startAccStream(deviceId: String) {
-        val coroutineScope = CoroutineScope(Dispatchers.Default)
-        Log.d(TAG, "Starting1")
         val isDisposed = accDisposable?.isDisposed ?: true
         if (isDisposed) {
-            Log.d(TAG, "Starting2")
             accDisposable = requestStreamSettings(
                 deviceId,
                 PolarBleApi.PolarDeviceDataType.ACC
@@ -284,7 +268,7 @@ class AndroidPolarController(
     private fun updateAngleValues(angleMeasurements: AngleMeasurements.Measurement) {
 
         _angleMeasurementCurrent.update { angleMeasurements }
-        updateQueue.add(angleMeasurements)
+        //updateQueue.add(angleMeasurements)
         // Create a new mutable list from the existing list and add the new measurement
         val updatedList = _angleMeasurements.value?.list?.toMutableList() ?: mutableListOf()
         updatedList.add(angleMeasurements)
@@ -299,7 +283,7 @@ class AndroidPolarController(
         accDisposable?.dispose()
         calculationModel.reset()
         _accCurrent.update { null }
-        _accStreaming = false
+        //_accStreaming = false
     }
 
     override fun startGyroStream(deviceId: String) {
@@ -313,25 +297,25 @@ class AndroidPolarController(
             }.observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { polarGyroData: PolarGyroData ->
-                    for (data in polarGyroData.samples) {
-                        _gyrCurrent.update { data }
-                        Log.d(
-                            TAG, "ACC degrees: " + calculationModel.getLinearAccelerationAngle(
-                                Triple(data.x, data.y, data.z)
-                            ).toString()
-                        )
-                        _gyrList.update { currentData ->
-                            val newSamples = currentData?.samples.orEmpty() + data
-                            PolarGyroData(newSamples, data.timeStamp)
+                        for (data in polarGyroData.samples) {
+                            _gyrCurrent.update { data }
+                            Log.d(
+                                TAG, "ACC degrees: " + calculationModel.getLinearAccelerationAngle(
+                                    Triple(data.x, data.y, data.z)
+                                ).toString()
+                            )
+                            _gyrList.update { currentData ->
+                                val newSamples = currentData?.samples.orEmpty() + data
+                                PolarGyroData(newSamples, data.timeStamp)
+                            }
+                            Log.d(
+                                TAG,
+                                "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
+                            )
                         }
-                        Log.d(
-                            TAG,
-                            "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                        )
-                    }
-                }, { error: Throwable ->
-                    Log.e(TAG, "GYR stream failed. Reason $error")
-                }, { Log.d(TAG, "GYR stream complete") })
+                    }, { error: Throwable ->
+                        Log.e(TAG, "GYR stream failed. Reason $error")
+                    }, { Log.d(TAG, "GYR stream complete") })
         } else {
             // NOTE dispose will stop streaming if it is "running"
             gyrDisposable?.dispose()
@@ -466,8 +450,6 @@ class AndroidPolarController(
                 ).toFlowable()
             }
     }
-
-
 
 
 }
