@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mobappdev.example.sensorapplication.R
 
@@ -49,21 +48,30 @@ fun HomeScreen(onInternalButtonClicked: () -> Unit, onExternalButtonClicked: () 
         )
     }
 }
+
 @Composable
 fun CardIcon(
     icon: Int,
     contentDescription: String?,
     cardDescription: String
 ) {
-    Column(modifier = Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Image(painter =
-        painterResource(
-            id = icon),
-            contentDescription = contentDescription, modifier = Modifier.fillMaxSize(0.8F))
-        Text(text = cardDescription, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+    ) {
+        Image(
+            painter =
+            painterResource(
+                id = icon
+            ),
+            contentDescription = contentDescription, modifier = Modifier.fillMaxSize(0.8F)
+        )
+        Text(
+            text = cardDescription,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     }
 }
 
@@ -75,7 +83,7 @@ fun ClickableIconCard(
     iconDescription: String?,
     cardDescription: String,
     onCardClicked: () -> Unit
-){
+) {
     Card(
         modifier = Modifier
             .aspectRatio(1F)
@@ -85,7 +93,11 @@ fun ClickableIconCard(
         ),
         onClick = onCardClicked
     ) {
-        CardIcon(icon = icon, contentDescription = iconDescription, cardDescription = cardDescription)
+        CardIcon(
+            icon = icon,
+            contentDescription = iconDescription,
+            cardDescription = cardDescription
+        )
     }
 }
 

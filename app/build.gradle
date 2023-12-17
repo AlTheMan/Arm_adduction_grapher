@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "mobappdev.example.sensorapplication"
-        minSdk 24
+        minSdk 26
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -53,6 +53,13 @@ dependencies {
     implementation 'com.github.polarofficial:polar-ble-sdk:5.1.0'
     implementation 'io.reactivex.rxjava3:rxjava:3.1.6'
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+
+
+    implementation 'androidx.room:room-ktx:2.6.1'
+    implementation "androidx.room:room-runtime:2.6.1"
+    kapt "androidx.room:room-compiler:2.6.1"
+
+    implementation 'com.google.code.gson:gson:2.10'
 
 
     // Bluetooth Scanning
