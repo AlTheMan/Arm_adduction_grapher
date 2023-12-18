@@ -1,6 +1,9 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
+
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +16,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.data.AngleMeasurements
+import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.persistence.MeasurementType
 import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
@@ -27,7 +31,11 @@ private const val TAG = "InternalDataVM"
 @HiltViewModel
 class InternalDataVM @Inject constructor(
     private val internalSensorController: InternalSensorController,
+
+    private val csvExporter: CsvExporter,
+
     private val measurementsRepository: MeasurementsRepository
+
 ) : ViewModel() {
 
     private var timer: Job? = null
@@ -105,6 +113,13 @@ class InternalDataVM @Inject constructor(
     }
 
 
+    fun exportData() {
+        csvExporter.exportMeasurements(measurements)
+        //csvExporter.exportData2()
+        //csvExporter.exportData()
+    }
+
+
     private fun startCounter() {
         if (timer == null) {
             _internalUiState.update { it.copy(timeInMs = 0) }
@@ -133,6 +148,7 @@ class InternalDataVM @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
         if (timer == null) {
             startCounter()

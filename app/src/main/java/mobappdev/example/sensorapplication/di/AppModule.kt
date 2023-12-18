@@ -15,10 +15,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import mobappdev.example.sensorapplication.data.AndroidPolarController
 import mobappdev.example.sensorapplication.data.CalculationModel
+import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.data.InternalSensorControllerImpl
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
@@ -64,6 +64,18 @@ object AppModule {
     fun providePolarController(@ApplicationContext context: Context, calculationModel: CalculationModel): PolarController {
         return AndroidPolarController(context, calculationModel)
     }
+
+    @Provides
+    @Singleton
+    fun provideCsvExporter(@ApplicationContext context: Context): CsvExporter {
+        return CsvExporter(context)
+    }
+
+    //@Provides
+    //@Singleton
+    //fun provideCsvExporter(): CsvExporter {
+    //    return CsvExporter(context)
+    //}
 
     @Provides
     @Singleton

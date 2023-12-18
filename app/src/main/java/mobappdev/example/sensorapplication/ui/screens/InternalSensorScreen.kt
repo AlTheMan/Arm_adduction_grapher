@@ -1,5 +1,7 @@
 package mobappdev.example.sensorapplication.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InternalSensorScreen(vm: InternalDataVM) {
 
@@ -48,6 +51,7 @@ fun InternalSensorScreen(vm: InternalDataVM) {
 
         AngleCanvas(modifier = Modifier, setDimensions = vm::setCanvasDimension, offsets = offsets)
         Spacer(modifier = Modifier.height(50.dp))
+
 
         if (state.measuring && state.countDownTimer < TimerValues.MAX_TIMER) {
             Text(
@@ -75,6 +79,12 @@ fun InternalSensorScreen(vm: InternalDataVM) {
                 onButtonClick = vm::stopDataStream
             )
         } else {
+            CardButton(
+                buttonText = "Export",
+                enabled = true,
+                cardHeight = 70.dp,
+                onButtonClick = vm::exportData
+            )
             Row(horizontalArrangement = Arrangement.Center) {
                 Column(modifier = Modifier.weight(1F)) {
                     SingleDualCardButton(
