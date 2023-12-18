@@ -119,7 +119,7 @@ class CsvExporter(private val context: Context) {
         val formattedDate = dateFormat.format(date)
 
         // Adding CSV headers
-        val headers = arrayOf("Angle", "Timestamp")
+        val headers = arrayOf("Angle (°C)", "Timestamp (ms)")
         dataBuilder.append(headers.joinToString(",")).append("\n")
 
         //val data = arrayOf("Ship Name", "Scientist Name", "...", formattedDate)

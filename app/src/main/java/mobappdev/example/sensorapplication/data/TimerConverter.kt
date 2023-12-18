@@ -22,8 +22,7 @@ object TimerConverter {
         var normalizedList = mutableListOf<Long>()
         var initialValue:Long=list.first()
         for(item in list){
-            var normalizedItem = (item - initialValue) //* Math.pow(10.0,-9.0) //zeros the first number. counts in seconds innstead of nanoseconds, and limits to 4 decimals.
-            //val formattedItem = String.format("%.4f", normalizedItem).toDouble()
+            var normalizedItem = ((item - initialValue) * Math.pow(10.0,-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
             normalizedList.add(normalizedItem)
         }
         return normalizedList
