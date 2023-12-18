@@ -23,7 +23,7 @@ private const val TAG = "CSV"
 class CsvExporter(private val context: Context) {
     //val csvExporter = CsvExporter(this) // 'this' refers to an Activity or Service context
 
-    @RequiresApi(Build.VERSION_CODES.Q)
+    @RequiresApi(Build.VERSION_CODES.O)
     fun exportData2() {
         val fileName = "AnalysisData.csv"
         val dataBuilder = StringBuilder()
@@ -40,7 +40,7 @@ class CsvExporter(private val context: Context) {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.Q)
+    @RequiresApi(Build.VERSION_CODES.O)
     fun saveToDownloadsFolder(context: Context, fileName: String, data: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //MediaStore API for API levels >=29
             Log.d(TAG, "running android version 11+, API level >=29")
