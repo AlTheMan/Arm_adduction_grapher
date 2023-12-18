@@ -9,13 +9,14 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified:
  */
 
-import android.os.CountDownTimer
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.polar.sdk.api.model.PolarDeviceInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,8 +28,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.data.AngleMeasurements
 import mobappdev.example.sensorapplication.domain.PolarController
+import mobappdev.example.sensorapplication.persistence.MeasurementType
+import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
 import mobappdev.example.sensorapplication.ui.shared.Canvas
+import mobappdev.example.sensorapplication.ui.shared.Helpers
 import mobappdev.example.sensorapplication.ui.shared.TimerValues
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 private const val LOG_TAG = "DataVM"
@@ -36,18 +41,16 @@ private const val LOG_TAG = "DataVM"
 @HiltViewModel
 class ExternalDataVM @Inject constructor(
     private val polarController: PolarController,
+    private val measurementsRepository: MeasurementsRepository
 ) : ViewModel() {
-    private var countDownTimer: CountDownTimer? = null
 
     private val _offsets = MutableStateFlow<List<Offset>>(emptyList())
     val offsets: StateFlow<List<Offset>> = _offsets
-
-
-    private val _currentAngle = MutableStateFlow<AngleMeasurements.Measurement>(
+    private val _currentAngle = MutableStateFlow(
         AngleMeasurements.Measurement()
     )
     val currentAngle: StateFlow<AngleMeasurements.Measurement> = _currentAngle
-
+    private val measurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
     private val _deviceList = MutableStateFlow<List<PolarDeviceInfo>>(listOf())
     val deviceList: StateFlow<List<PolarDeviceInfo>>
         get() = _deviceList.asStateFlow()
@@ -60,7 +63,7 @@ class ExternalDataVM @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
-
+    private var timer: Job? = null
     private var streamType: StreamType? = null
     private val _deviceId = MutableStateFlow("")
 
@@ -89,18 +92,12 @@ class ExternalDataVM @Inject constructor(
     }
 
     fun startMeasurement(){
-        _state.update { it.copy(startTime = -1L) }
+        _state.update { it.copy(startTime = -1L, showSaveButton = false) }
         if (state.value.dualMeasurement){
             startExtAccAndGyro()
         } else {
             startExtAcc()
         }
-        if (_state.value.selectedTimerValue < TimerValues.MAX_TIMER) {
-            //startCountdownTimer(_state.value.selectedTimerValue.toLong() * TimerValues.COUNTDOWN_INTERVAL)
-        }
-
-
-
     }
 
     private fun startExtAccAndGyro() {
@@ -133,9 +130,12 @@ class ExternalDataVM @Inject constructor(
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
-        if (countDownTimer != null) {
-            cancelTimer()
-        }
+        stopCounter()
+        _state.update { it.copy(
+            showSaveButton = true,
+            countDownTimer = _state.value.selectedTimerValue.toInt()
+        ) }
+
         Log.d(LOG_TAG, "Stream stopped.")
     }
     private fun deviceInList(polarDeviceInfo: PolarDeviceInfo): Boolean {
@@ -175,29 +175,58 @@ class ExternalDataVM @Inject constructor(
         _state.value = state.value.copy(dualMeasurement = true)
     }
 
-    private fun startCountdownTimer(totalTime: Long) {
-        countDownTimer = object : CountDownTimer(totalTime, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                println("Seconds remaining: ${millisUntilFinished / 1000}")
-                _state.update { it.copy(countDownTimer = (millisUntilFinished / 1000).toInt()) }
-            }
-
-            override fun onFinish() {
+    private fun stopCounter() {
+        if (timer != null) {
+            timer!!.cancel()
+            timer = null
+        }
+    }
+    private fun startCounter() {
+        if (timer == null) {
+            _state.update { it.copy(timeInMs = 0) }
+            timer = viewModelScope.launch {
+                var counter = 0
+                while (_state.value.countDownTimer > 0) {
+                    delay(TimerValues.UPDATE_TIME)
+                    _state.update { it.copy(timeInMs = _state.value.timeInMs + TimerValues.UPDATE_TIME) }
+                    counter++
+                    if (counter == 10) {
+                        _state.update { it.copy(countDownTimer = _state.value.countDownTimer - 1) }
+                        counter = 0
+                    }
+                }
                 stopDataStream()
-                println("Timer finished")
             }
         }
-        countDownTimer?.start()
     }
 
-    private fun cancelTimer(){
-        countDownTimer?.cancel()
-        countDownTimer = null
+
+    fun saveToDb() {
+        val timeMeasured = _state.value.timeInMs
+        if (timeMeasured <= 0.5) {
+            return
+        }
+        viewModelScope.launch {
+            val dateTime: LocalDateTime = LocalDateTime.parse(_state.value.streamStarted)
+            val measurementType: MeasurementType = MeasurementType.EXTERNAL
+            measurementsRepository.insertMeasurements(
+                measurements = measurements,
+                type = measurementType,
+                dateTime = dateTime,
+                timeMeasured = timeMeasured
+            )
+            Log.d(LOG_TAG, measurementsRepository.getSize().toString())
+
+            _state.update { it.copy(showSaveButton = false) }
+
+        }
     }
 
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
-        if (countDownTimer == null && _state.value.selectedTimerValue < TimerValues.MAX_TIMER) {
-            startCountdownTimer(_state.value.selectedTimerValue.toLong() * TimerValues.COUNTDOWN_INTERVAL)
+        if (timer == null) {
+            startCounter()
+            _state.update { it.copy(streamStarted = Helpers.getFormattedDateTimeNow()) }
+            Log.d(LOG_TAG, "Counting up")
         }
         val yValue = Canvas.convertAngleToY(_state.value.canvasHeight, measurement.angle)
         val xValue = Canvas.convertTimestampToX(measurement.timestamp, _state.value.selectedTimerValue, _state.value.startTime)
@@ -234,13 +263,12 @@ class ExternalDataVM @Inject constructor(
                     if (it != null) {
                         _currentAngle.value = it
                         addToOffsets(it)
+                        measurements.add(it)
                     }
                 }
 
 
             }
-
-
         }
     }
 }
@@ -251,11 +279,14 @@ data class DataUiState(
     val showDialog: Boolean = false,
     val isSearching: Boolean = false,
     val dualMeasurement: Boolean = false,
+    val showSaveButton: Boolean = false,
     val canvasWidth: Float = 1000F,
     val canvasHeight: Float = 1000F,
     val selectedTimerValue: Float = TimerValues.MIN_TIMER.toFloat(),
     val countDownTimer: Int = TimerValues.MIN_TIMER,
     val startTime: Long = -1L,
+    val timeInMs: Long = 0L,
+    val streamStarted: String = "",
 )
 
 private enum class StreamType {

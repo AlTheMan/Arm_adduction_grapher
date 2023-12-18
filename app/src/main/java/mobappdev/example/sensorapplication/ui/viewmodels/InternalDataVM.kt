@@ -1,9 +1,7 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,9 +19,9 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.persistence.MeasurementType
 import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
 import mobappdev.example.sensorapplication.ui.shared.Canvas
+import mobappdev.example.sensorapplication.ui.shared.Helpers
 import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 private const val TAG = "InternalDataVM"
@@ -39,7 +37,6 @@ class InternalDataVM @Inject constructor(
 ) : ViewModel() {
 
     private var timer: Job? = null
-    private var activeTimer: Boolean = false
 
     private val measurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
 
@@ -123,13 +120,12 @@ class InternalDataVM @Inject constructor(
     private fun startCounter() {
         if (timer == null) {
             _internalUiState.update { it.copy(timeInMs = 0) }
-            activeTimer = true
             timer = viewModelScope.launch {
                 var counter = 0
                 while (_internalUiState.value.countDownTimer > 0) {
                     delay(TimerValues.UPDATE_TIME)
-                    counter++
                     _internalUiState.update { it.copy(timeInMs = _internalUiState.value.timeInMs + TimerValues.UPDATE_TIME) }
+                    counter++
                     if (counter == 10) {
                         _internalUiState.update { it.copy(countDownTimer = _internalUiState.value.countDownTimer - 1) }
                         counter = 0
@@ -142,22 +138,17 @@ class InternalDataVM @Inject constructor(
 
     private fun stopCounter() {
         if (timer != null) {
-            activeTimer = false
             timer!!.cancel()
             timer = null
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
         if (timer == null) {
             startCounter()
+            _internalUiState.update { it.copy(streamStarted = Helpers.getFormattedDateTimeNow()) }
             Log.d(TAG, "Counting up")
         }
-        val now = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-        val formattedDate = now.format(formatter)
-        _internalUiState.update { it.copy(streamStarted = formattedDate) }
 
         val yValue = Canvas.convertAngleToY(
             _internalUiState.value.canvasHeight,
@@ -204,7 +195,6 @@ class InternalDataVM @Inject constructor(
         }
         viewModelScope.launch {
             val dateTime: LocalDateTime = LocalDateTime.parse(_internalUiState.value.streamStarted)
-
             val measurementType: MeasurementType = MeasurementType.INTERNAL
             measurementsRepository.insertMeasurements(
                 measurements = measurements,

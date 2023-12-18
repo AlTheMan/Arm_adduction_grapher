@@ -25,7 +25,6 @@ import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InternalSensorScreen(vm: InternalDataVM) {
 

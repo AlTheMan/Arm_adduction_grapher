@@ -52,6 +52,9 @@ fun ExternalSensorScreen(vm: ExternalDataVM) {
                 vm::disconnectFromSensor
             )
     }
+    if (state.showSaveButton){
+        CardButton(buttonText = "Save", enabled = true, cardHeight = 50.dp, onButtonClick = vm::saveToDb)
+    }
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Bottom,
