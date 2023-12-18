@@ -13,7 +13,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import mobappdev.example.sensorapplication.data.AndroidPolarController
 import mobappdev.example.sensorapplication.data.CalculationModel
@@ -42,9 +41,15 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCsvExporter(): CsvExporter {
-        return CsvExporter()
+    fun provideCsvExporter(@ApplicationContext context: Context): CsvExporter {
+        return CsvExporter(context)
     }
+
+    //@Provides
+    //@Singleton
+    //fun provideCsvExporter(): CsvExporter {
+    //    return CsvExporter(context)
+    //}
 
     @Provides
     @Singleton

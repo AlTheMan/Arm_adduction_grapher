@@ -1,7 +1,9 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
+import android.os.Build
 import android.os.CountDownTimer
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,8 +76,10 @@ class InternalDataVM @Inject constructor(
         _internalUiState.update { it.copy(measuring = true) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun exportData(){
-        csvExporter.exportData()
+        csvExporter.exportData2()
+        //csvExporter.exportData()
     }
 
     private fun startCountdownTimer(totalTime: Long) {
