@@ -1,6 +1,5 @@
 package mobappdev.example.sensorapplication.data
 
-import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.os.Build
@@ -9,8 +8,6 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import java.io.File
-import java.io.FileWriter
-import com.opencsv.CSVWriter
 import mobappdev.example.sensorapplication.persistence.converters.MeasurementConverters
 import mobappdev.example.sensorapplication.persistence.dto.MeasurementDTO
 import java.io.FileOutputStream
@@ -84,15 +81,36 @@ class CsvExporter(private val context: Context) {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>
-    ){
-        val newMeasurements = MeasurementConverters.toDto(measurements)
-        exportMeasurements2(newMeasurements)
+    private fun truncateMeasurements(measurements: List<AngleMeasurements.Measurement>):List<AngleMeasurements.Measurement>{
+        var angleList = mutableListOf<Float>()
+        var timestampList = mutableListOf<Long>()
+        for(measurement in measurements){
+            angleList.add(measurement.angle)
+            timestampList.add(measurement.timestamp)
+        }
+        var truncatedAngle = TimerConverter.normalizeAngles(angleList)
+        var truncatedTimestamp = TimerConverter.normalizeTimestamps(timestampList)
+
+        var truncatedMeasurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
+
+        if (truncatedAngle.size != truncatedTimestamp.size) Log.d(TAG, "truncatedAngle and truncatedTimestamp are not the same size")
+        for (i in truncatedAngle.indices) {
+            val angle = truncatedAngle[i]
+            val timestamp = truncatedTimestamp[i]
+            truncatedMeasurements.add(AngleMeasurements.Measurement(angle, timestamp))
+        }
+        return truncatedMeasurements
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun exportMeasurements2(measurements: List<MeasurementDTO>) {
+    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
+        var truncatedMeasurements = truncateMeasurements(measurements)
+        val dtoMeasurements = MeasurementConverters.toDto(truncatedMeasurements)
+        exportMeasurements2(dtoMeasurements)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun exportMeasurements2(measurements: List<MeasurementDTO>) {
         val fileName = "adduction.csv"
         val dataBuilder = StringBuilder()
 
