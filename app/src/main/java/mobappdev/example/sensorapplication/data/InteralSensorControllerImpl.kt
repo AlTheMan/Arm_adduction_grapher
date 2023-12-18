@@ -14,6 +14,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -27,6 +28,7 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import javax.inject.Inject
 
 private const val LOG_TAG = "InternalSensorController"
+private const val UPDATE_DELAY = 5L
 
 class InternalSensorControllerImpl @Inject constructor(
     context: Context,
@@ -47,7 +49,10 @@ class InternalSensorControllerImpl @Inject constructor(
     override val currentLinAccUI: StateFlow<Triple<Float, Float, Float>?>
         get() = _currentLinAccUI.asStateFlow()
 
-    private var _currentGyro: Triple<Float, Float, Float>? = null
+    //private var _currentGyro: Triple<Float, Float, Float>? = null
+
+    private var _currentGyro: MeasurementData? = null
+    private var _currentLinAcc: MeasurementData? = null
 
     // Expose gyro to the UI on a certain interval
     private val _currentGyroUI = MutableStateFlow<Triple<Float, Float, Float>?>(null)
@@ -58,7 +63,7 @@ class InternalSensorControllerImpl @Inject constructor(
     override val streamingGyro: StateFlow<Boolean>
         get() = _streamingGyro.asStateFlow()
 
-    private var _currentLinAcc: Triple<Float, Float, Float>? = null
+    //private var _currentLinAcc: Triple<Float, Float, Float>? = null
 
     private val _streamingLinAcc = MutableStateFlow(false)
     override val streamingLinAcc: StateFlow<Boolean>
@@ -88,9 +93,17 @@ class InternalSensorControllerImpl @Inject constructor(
         GlobalScope.launch(Dispatchers.Main) {
             _streamingLinAcc.value = true
             while (_streamingLinAcc.value) {
-                Log.e(LOG_TAG, _currentLinAcc.toString())
-                _currentLinAccUI.update { _currentLinAcc }
-                delay(1000)
+                delay(UPDATE_DELAY)
+                if (_currentLinAcc != null) {  //TODO: Om appen hänger sig, ta bort denna. Detta är ett test
+                    val angle = calculationModel.getLinearAccelerationAngle(_currentLinAcc!!.axisValues)
+                    val angleWithTimestamp =
+                        AngleMeasurements.Measurement(angle, _currentLinAcc!!.timestamp)
+                    updateAngleValues(angleWithTimestamp)
+                } else {
+                    Log.d(LOG_TAG, "Null")
+                }
+
+
             }
         }
 
@@ -102,13 +115,39 @@ class InternalSensorControllerImpl @Inject constructor(
             _currentLinAccUI.update { null }
             sensorManager.unregisterListener(this, imuSensor)
             _streamingLinAcc.value = false
-
         }
+    }
 
+    override fun startDualStream() {
+        if (gyroSensor == null || imuSensor == null) {
+            Log.e(LOG_TAG, "Sensor not found on device")
+            return
+        }
+        if (_streamingGyro.value || _streamingLinAcc.value) {
+            Log.e(LOG_TAG, "Sensors are active")
+            return
+        }
+        Log.e(LOG_TAG, "Starting dual stream")
+        val coroutineScope = CoroutineScope(Dispatchers.Main)
+        sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI)
+        sensorManager.registerListener(this, imuSensor, SensorManager.SENSOR_DELAY_UI)
+        coroutineScope.launch(Dispatchers.Main) {
+            _streamingGyro.value = true
+            _streamingLinAcc.value = true
+            while (_streamingLinAcc.value && _streamingGyro.value) {
+                delay(UPDATE_DELAY)
+                val angle = calculationModel.getLinearAccelerationAngleWithGyroFilter(
+                    _currentLinAcc!!.axisValues, _currentGyro!!.axisValues
+                )
+                val angleWithTimestamp = AngleMeasurements.Measurement(angle, _currentGyro!!.timestamp)
+                updateAngleValues(angleWithTimestamp)
+            }
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun startGyroStream() {
+        /*
         if (gyroSensor == null) {
             Log.e(LOG_TAG, "Gyroscope sensor is not available on this device")
             return
@@ -117,24 +156,22 @@ class InternalSensorControllerImpl @Inject constructor(
             Log.e(LOG_TAG, "Gyroscope sensor is already streaming")
             return
         }
-
         // Register this class as a listener for gyroscope events
         sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI)
         // Start a coroutine to update the UI variable on a 2 Hz interval
         GlobalScope.launch(Dispatchers.Main) {
             _streamingGyro.value = true
             while (_streamingGyro.value) {
-                // Update the UI variable
-                _currentGyroUI.update { _currentGyro }
-                delay(500)
+                delay(1000)
             }
         }
-
+*/
     }
 
     override fun stopGyroStream() {
         if (_streamingGyro.value) {
             // Unregister the listener to stop receiving gyroscope events (automatically stops the coroutine as well
+            Log.d(LOG_TAG, "Stopping Gyro Stream")
             _currentGyroUI.update { null }
             sensorManager.unregisterListener(this, gyroSensor)
             _streamingGyro.value = false
@@ -143,28 +180,19 @@ class InternalSensorControllerImpl @Inject constructor(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            // Extract gyro data (angular speed around X, Y, and Z axes
-            _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
-
+            _currentGyro = MeasurementData(
+                Triple(event.values[0], event.values[1], event.values[2]), event.timestamp
+            )
         }
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-            _currentLinAcc = Triple(event.values[0], event.values[1], event.values[2])
-            if (_currentLinAcc != null) {
-                var angleMeasurements = AngleMeasurements.Measurement(
-                    calculationModel.getLinearAccelerationAngle(_currentLinAcc!!), event.timestamp
-                )
-                Log.d(
-                    LOG_TAG,
-                    "angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString()
-                )
-                updateAngleValues(angleMeasurements)
-            }
+            _currentLinAcc = MeasurementData(
+                Triple(event.values[0], event.values[1], event.values[2]), event.timestamp
+            )
         }
     }
 
     private fun updateAngleValues(angleMeasurements: AngleMeasurements.Measurement) {
-        _angleMeasurementCurrent.value = angleMeasurements
-
+        _angleMeasurementCurrent.value = angleMeasurements // UI update
         // Create a new mutable list from the existing list and add the new measurement
         val updatedList = _angleMeasurements.value?.list?.toMutableList() ?: mutableListOf()
         updatedList.add(angleMeasurements)
@@ -177,4 +205,10 @@ class InternalSensorControllerImpl @Inject constructor(
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not used in this example
     }
+
+
 }
+
+data class MeasurementData(
+    val axisValues: Triple<Float, Float, Float>, val timestamp: Long
+)

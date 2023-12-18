@@ -9,6 +9,7 @@ package mobappdev.example.sensorapplication.di
  */
 
 import android.content.Context
+import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,12 +21,36 @@ import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.data.InternalSensorControllerImpl
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
+import mobappdev.example.sensorapplication.persistence.MeasurementDB
+import mobappdev.example.sensorapplication.persistence.MeasurementsDao
+import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
 import javax.inject.Singleton
 
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+
+    @Provides
+    @Singleton
+    fun provideMeasurementDB(
+        @ApplicationContext app: Context
+    ) = Room.databaseBuilder(
+        app,
+        MeasurementDB::class.java,
+        "measurementsDB"
+    ).build()
+
+    @Singleton
+    @Provides
+    fun provideMeasurementsDao(db: MeasurementDB) = db.getMeasurementsDao()
+
+    @Provides
+    @Singleton
+    fun provideMeasurementRepository(dao: MeasurementsDao): MeasurementsRepository {
+        return MeasurementsRepository(dao)
+    }
 
     @Provides
     @Singleton

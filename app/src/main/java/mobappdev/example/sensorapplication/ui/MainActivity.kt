@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 29)
         }
 
+
+
         setContent {
             SensorapplicationTheme {
                 val externalDataVM = hiltViewModel<ExternalDataVM>()
@@ -75,6 +77,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onExternalButtonClicked = {
                                     navController.navigate("externalScreen")
+                                },
+                                onLoadButtonClicked = {
+                                    navController.navigate("persistenceScreen")
                                 }
                             )
                         }
@@ -95,6 +100,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
     private fun checkAndRequestPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE)
@@ -118,3 +124,5 @@ class MainActivity : ComponentActivity() {
         private const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
     }
 }
+
+

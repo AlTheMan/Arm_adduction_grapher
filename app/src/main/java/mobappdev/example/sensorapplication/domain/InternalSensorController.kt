@@ -28,4 +28,5 @@ interface InternalSensorController {
 
     fun startGyroStream()
     fun stopGyroStream()
+    fun startDualStream()
 }

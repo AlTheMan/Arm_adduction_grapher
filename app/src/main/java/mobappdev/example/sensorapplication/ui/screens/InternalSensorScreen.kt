@@ -1,6 +1,7 @@
 package mobappdev.example.sensorapplication.ui.screens
 
-import android.widget.Space
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,17 +17,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mobappdev.example.sensorapplication.ui.components.AngleCanvas
 import mobappdev.example.sensorapplication.ui.components.CardButton
 import mobappdev.example.sensorapplication.ui.components.NumberPickerSlider
 import mobappdev.example.sensorapplication.ui.components.SingleDualCardButton
+import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InternalSensorScreen(vm: InternalDataVM) {
 
     val state by vm.internalUiState.collectAsState()
-    val angle by vm.angleCurrentInternal.collectAsState()
+    val angle by vm.currentAngle.collectAsState()
+    val offsets by vm.offsets.collectAsState()
+
+    if (state.showSaveButton){
+        CardButton(buttonText = "Save", enabled = true, cardHeight = 50.dp, onButtonClick = vm::saveToDb)
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -35,26 +44,31 @@ fun InternalSensorScreen(vm: InternalDataVM) {
     ) {
 
         Text(
-            text = if (state.measuring) String.format("%.1f", angle?.angle ?: 7f) else "-",
+            text = if (state.measuring) String.format("%.1f", angle.angle) else "-",
             fontSize = 54.sp,
             color = Color.Black,
         )
 
+        AngleCanvas(modifier = Modifier, setDimensions = vm::setCanvasDimension, offsets = offsets)
+        Spacer(modifier = Modifier.height(50.dp))
 
 
-        Spacer(modifier = Modifier.height(200.dp))
-
-
-        if (state.measuring) {
+        if (state.measuring && state.countDownTimer < TimerValues.MAX_TIMER) {
             Text(
                 text = state.countDownTimer.toString(),
                 fontSize = 54.sp,
                 color = Color.Black,
             )
-            Spacer(modifier = Modifier.height(100.dp))
-        }
-        else  {
-            NumberPickerSlider(range = 10..31, selectedNumber = state.selectedTimerValue, onNumberSelected = vm::setTimerValue)
+            Spacer(modifier = Modifier.height(48.dp))
+
+        } else if (!state.measuring) {
+            NumberPickerSlider(
+                range = TimerValues.MIN_TIMER..TimerValues.MAX_TIMER,
+                selectedNumber = state.selectedTimerValue,
+                onNumberSelected = vm::setTimerValue
+            )
+        } else {
+            Spacer(modifier = Modifier.height(120.dp))
         }
 
         if (state.measuring) {
