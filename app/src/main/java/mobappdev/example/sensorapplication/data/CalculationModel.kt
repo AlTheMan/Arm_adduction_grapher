@@ -25,7 +25,7 @@ class CalculationModel {
 
     fun getLinearAccelerationAngleWithGyroFilter(axes: Triple<Float, Float, Float>, gyroscope: Triple<Float, Float, Float>): Float{
         val accFiltered = getLinearAccelerationAngle(axes)
-        val pitch = getPitchAngle(axes)
+        val pitch = getPitchAngle(gyroscope)
         val gyroFiltered = radiansToDegrees(linearAccelerationFilterGyro(pitch))
         return sensorFusionFilter(accFiltered, gyroFiltered)
     }
