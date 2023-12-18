@@ -25,9 +25,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.ExternalSensorScreen
 import mobappdev.example.sensorapplication.ui.screens.HomeScreen
 import mobappdev.example.sensorapplication.ui.screens.InternalSensorScreen
+import mobappdev.example.sensorapplication.ui.screens.PersistenceScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.InternalDataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.PersistenceVM
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
             SensorapplicationTheme {
                 val externalDataVM = hiltViewModel<ExternalDataVM>()
                 val internalDataVM = hiltViewModel<InternalDataVM>()
+                val persistenceVM = hiltViewModel<PersistenceVM>()
                 // Use hardcoded deviceID
                 externalDataVM.chooseSensor(deviceId)
 
@@ -83,6 +86,11 @@ class MainActivity : ComponentActivity() {
 
                         composable("externalScreen") {
                             ExternalSensorScreen(vm = externalDataVM)
+                        }
+                        composable("persistenceScreen"){
+                            PersistenceScreen(vm = persistenceVM, onMeasurementButtonClicked = {
+                                navController.navigate("homeScreen")
+                            })
                         }
 
 

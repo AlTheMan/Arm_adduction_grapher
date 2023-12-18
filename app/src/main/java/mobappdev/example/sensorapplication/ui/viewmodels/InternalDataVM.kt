@@ -6,6 +6,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -18,6 +20,7 @@ import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
 import mobappdev.example.sensorapplication.ui.shared.Canvas
 import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 private const val TAG = "InternalDataVM"
@@ -29,6 +32,8 @@ class InternalDataVM @Inject constructor(
 ) : ViewModel() {
 
     private var countDownTimer: CountDownTimer? = null
+    private var timer: Job? = null
+    private var activeTimer: Boolean = false
 
     private val measurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
 
@@ -65,6 +70,7 @@ class InternalDataVM @Inject constructor(
         Log.d(TAG, "Stream stopped.")
         Log.d(TAG, "No of measurements saved: " + measurements.size)
         _internalUiState.update { it.copy(showSaveButton = true) }
+        stopCounter()
     }
 
     fun startMeasurement() {
@@ -97,6 +103,28 @@ class InternalDataVM @Inject constructor(
 
     }
 
+
+    private fun startCounter() {
+        if (timer == null) {
+            _internalUiState.update { it.copy(timeInMs = 0) }
+            activeTimer = true
+            timer = viewModelScope.launch {
+                while (activeTimer) {
+                    delay(1)
+                    _internalUiState.update { it.copy(timeInMs = _internalUiState.value.timeInMs + 1) }
+                }
+            }
+        }
+    }
+
+    private fun stopCounter(){
+        if (timer != null) {
+            activeTimer = false
+            timer = null
+            Log.d(TAG, "Timer: " + (_internalUiState.value.timeInMs / 1000.0)) // why isnt this showing any decimals?
+        }
+    }
+
     private fun startCountdownTimer(totalTime: Long) {
         viewModelScope.launch {
             countDownTimer =
@@ -120,7 +148,14 @@ class InternalDataVM @Inject constructor(
         if (countDownTimer == null && _internalUiState.value.selectedTimerValue < TimerValues.MAX_TIMER) {
             startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * TimerValues.COUNTDOWN_INTERVAL)
         }
-        _internalUiState.update { it.copy(streamStarted = LocalDateTime.now().toString()) }
+        if (timer == null) {
+            startCounter()
+            Log.d(TAG, "Counting up")
+        }
+        val now = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+        val formattedDate = now.format(formatter)
+        _internalUiState.update { it.copy(streamStarted = formattedDate) }
 
         val yValue = Canvas.convertAngleToY(
             _internalUiState.value.canvasHeight,
@@ -137,13 +172,6 @@ class InternalDataVM @Inject constructor(
         } else {
             _offsets.value = _offsets.value + Offset(xValue, yValue)
         }
-        Log.d(
-            TAG,
-            "List size: " + _offsets.value.size.toString() + "| X: " + String.format(
-                "%.1f",
-                xValue
-            ) + "| Y: " + yValue
-        )
     }
 
 
@@ -174,15 +202,20 @@ class InternalDataVM @Inject constructor(
     }
 
     fun saveToDb() {
+        val timeMeasured = _internalUiState.value.timeInMs
+        if (timeMeasured <= 0.5) {
+            return
+        }
         viewModelScope.launch {
             val dateTime: LocalDateTime = LocalDateTime.parse(_internalUiState.value.streamStarted)
+
             val measurementType: MeasurementType = MeasurementType.INTERNAL
             measurementsRepository.insertMeasurements(
                 measurements = measurements,
                 type = measurementType,
-                dateTime = dateTime
+                dateTime = dateTime,
+                timeMeasured = timeMeasured
             )
-
             Log.d(TAG, measurementsRepository.getSize().toString())
 
             _internalUiState.update { it.copy(showSaveButton = false) }
@@ -221,4 +254,5 @@ data class InternalDataUiState(
     val canvasHeight: Float = 1000F,
     val showSaveButton: Boolean = false,
     val streamStarted: String = "",
+    val timeInMs: Long = 0L
 )

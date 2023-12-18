@@ -47,7 +47,7 @@ fun CardButton(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center) {
-            Text(text = buttonText)
+            Text(text = buttonText, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
