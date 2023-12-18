@@ -81,27 +81,26 @@ class CsvExporter(private val context: Context) {
     }
 
 
+    /**
+     * Angle: limits the angle to two decimals and..
+     * Timestamp: zeros the first number and reduces all consequent numbers by the same ammount. Counts in miliseconds innstead of nanoseconds
+     */
     private fun truncateMeasurements(measurements: List<AngleMeasurements.Measurement>):List<AngleMeasurements.Measurement>{
-        var angleList = mutableListOf<Float>()
-        var timestampList = mutableListOf<Long>()
-        for(measurement in measurements){
-            angleList.add(measurement.angle)
-            timestampList.add(measurement.timestamp)
-        }
-        var truncatedAngle = TimerConverter.normalizeAngles(angleList)
-        var truncatedTimestamp = TimerConverter.normalizeTimestamps(timestampList)
-
+        if(measurements.isEmpty()) return measurements
+        var initialTimestamp:Long=measurements.first().timestamp
         var truncatedMeasurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
-
-        if (truncatedAngle.size != truncatedTimestamp.size) Log.d(TAG, "truncatedAngle and truncatedTimestamp are not the same size")
-        for (i in truncatedAngle.indices) {
-            val angle = truncatedAngle[i]
-            val timestamp = truncatedTimestamp[i]
-            truncatedMeasurements.add(AngleMeasurements.Measurement(angle, timestamp))
+        for(measurement in measurements){
+            var normalizedAngle = String.format("%.2f", measurement.angle).toFloat() //limits the angle to two decimals
+            var normalizedTimestamp = ((measurement.timestamp - initialTimestamp) * Math.pow(10.0,-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
+            truncatedMeasurements.add(AngleMeasurements.Measurement(normalizedAngle, normalizedTimestamp))
         }
         return truncatedMeasurements
     }
 
+    /**
+     * exports in csv format. Angle is in degrees (C) and timestamp in miliseconds.
+     * Exports to download-folder in android phone
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
         var truncatedMeasurements = truncateMeasurements(measurements)
@@ -114,16 +113,16 @@ class CsvExporter(private val context: Context) {
         val fileName = "adduction.csv"
         val dataBuilder = StringBuilder()
 
+        //CAdding SV date header
         val date = Date()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val formattedDate = dateFormat.format(date)
+        var headerDate = arrayOf("Date: ", formattedDate.toString())
+        dataBuilder.append(headerDate.joinToString(",")).append("\n")
 
         // Adding CSV headers
         val headers = arrayOf("Angle (°C)", "Timestamp (ms)")
         dataBuilder.append(headers.joinToString(",")).append("\n")
-
-        //val data = arrayOf("Ship Name", "Scientist Name", "...", formattedDate)
-        //dataBuilder.append(data.joinToString(",")).append("\n")
 
         // Iterating through the measurements and appending each as a CSV row
         for (measurement in measurements) {
