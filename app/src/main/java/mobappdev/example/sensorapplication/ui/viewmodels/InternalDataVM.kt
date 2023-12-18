@@ -108,7 +108,8 @@ class InternalDataVM @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun exportData(){
-        csvExporter.exportData2()
+        csvExporter.exportMeasurements(measurements)
+        //csvExporter.exportData2()
         //csvExporter.exportData()
     }
 

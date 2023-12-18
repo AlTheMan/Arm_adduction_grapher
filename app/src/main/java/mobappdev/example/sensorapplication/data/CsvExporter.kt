@@ -11,6 +11,8 @@ import androidx.annotation.RequiresApi
 import java.io.File
 import java.io.FileWriter
 import com.opencsv.CSVWriter
+import mobappdev.example.sensorapplication.persistence.converters.MeasurementConverters
+import mobappdev.example.sensorapplication.persistence.dto.MeasurementDTO
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -82,7 +84,42 @@ class CsvExporter(private val context: Context) {
     }
 
 
-    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>
+    ){
+        val newMeasurements = MeasurementConverters.toDto(measurements)
+        exportMeasurements2(newMeasurements)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun exportMeasurements2(measurements: List<MeasurementDTO>) {
+        val fileName = "adduction.csv"
+        val dataBuilder = StringBuilder()
+
+        val date = Date()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val formattedDate = dateFormat.format(date)
+
+        // Adding CSV headers
+        val headers = arrayOf("Angle", "Timestamp")
+        dataBuilder.append(headers.joinToString(",")).append("\n")
+
+        //val data = arrayOf("Ship Name", "Scientist Name", "...", formattedDate)
+        //dataBuilder.append(data.joinToString(",")).append("\n")
+
+        // Iterating through the measurements and appending each as a CSV row
+        for (measurement in measurements) {
+            //val formattedTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(measurement.timestamp))
+            val row = arrayOf(measurement.angle.toString(), measurement.timestamp.toString())
+            dataBuilder.append(row.joinToString(",")).append("\n")
+        }
+
+        Log.d(TAG, "inside exportMeasurements")
+        saveToDownloadsFolder(context, fileName, dataBuilder.toString())
+    }
+
+
+    fun exportMeasurementsDontUse(measurements: List<AngleMeasurements.Measurement>) {
         val baseDir = android.os.Environment.getExternalStorageDirectory().absolutePath
         val fileName = "MeasurementsData.csv"
         val filePath = "$baseDir${File.separator}$fileName"
