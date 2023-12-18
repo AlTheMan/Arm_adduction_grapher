@@ -10,6 +10,7 @@ package mobappdev.example.sensorapplication.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,7 +41,7 @@ object AppModule {
         app,
         MeasurementDB::class.java,
         "measurementsDB"
-    ).build()
+    ).fallbackToDestructiveMigration().build()
 
     @Singleton
     @Provides

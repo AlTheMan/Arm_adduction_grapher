@@ -11,5 +11,6 @@ data class MeasurementsEntity(
     var id: Int? = null,
     var type: MeasurementType,
     var timeOfMeasurement: LocalDateTime,
-    var measurements: List<MeasurementDTO>
+    var measurements: List<MeasurementDTO>,
+    var timeMeasured: Long
 )
