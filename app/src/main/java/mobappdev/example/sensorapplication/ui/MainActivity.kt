@@ -70,6 +70,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onExternalButtonClicked = {
                                     navController.navigate("externalScreen")
+                                },
+                                onLoadButtonClicked = {
+                                    navController.navigate("persistenceScreen")
                                 }
                             )
                         }

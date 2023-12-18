@@ -30,6 +30,9 @@ fun InternalSensorScreen(vm: InternalDataVM) {
     val angle by vm.currentAngle.collectAsState()
     val offsets by vm.offsets.collectAsState()
 
+    if (state.showSaveButton){
+        CardButton(buttonText = "Save", enabled = true, cardHeight = 50.dp, onButtonClick = vm::saveToDb)
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
