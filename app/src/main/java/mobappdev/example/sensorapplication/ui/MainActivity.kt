@@ -25,6 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.ExternalSensorScreen
 import mobappdev.example.sensorapplication.ui.screens.HomeScreen
 import mobappdev.example.sensorapplication.ui.screens.InternalSensorScreen
+import mobappdev.example.sensorapplication.ui.screens.LoadedMeasurementScreen
 import mobappdev.example.sensorapplication.ui.screens.PersistenceScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.ExternalDataVM
@@ -89,8 +90,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("persistenceScreen"){
                             PersistenceScreen(vm = persistenceVM, onMeasurementButtonClicked = {
-                                navController.navigate("homeScreen")
+                                persistenceVM.getMeasurement(it)
+                                navController.navigate("loadedMeasurementScreen")
                             })
+                        }
+                        composable("loadedMeasurementScreen") {
+                            LoadedMeasurementScreen(vm = persistenceVM)
                         }
 
 

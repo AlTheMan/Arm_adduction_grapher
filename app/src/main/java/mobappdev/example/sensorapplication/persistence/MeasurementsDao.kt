@@ -24,8 +24,8 @@ interface MeasurementsDao {
     @Query("SELECT id, type, timeOfMeasurement FROM measurements")
     fun getAllSummary() : Flow<List<MeasurementSummary>>
 
-    @Query("SELECT measurements FROM measurements WHERE id = :id")
-    fun getMeasurement(id: Int) : String
+    @Query("SELECT * FROM measurements WHERE id = :id")
+    suspend fun getMeasurement(id: Int) : MeasurementsEntity
 
     @Query("DELETE FROM measurements WHERE id = :id")
     suspend fun deleteById(id: Int)

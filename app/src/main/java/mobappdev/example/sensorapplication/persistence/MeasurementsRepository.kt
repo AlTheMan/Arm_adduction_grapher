@@ -40,9 +40,8 @@ class MeasurementsRepository @Inject constructor(
         measurementsDao.deleteById(id)
     }
 
-    suspend fun get(id: Int): List<MeasurementDTO> {
-        val data = measurementsDao.getMeasurement(id)
-        return MeasurementConverters.fromString(data)
+    suspend fun get(id: Int): MeasurementsEntity {
+        return measurementsDao.getMeasurement(id)
     }
 
 }

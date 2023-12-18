@@ -17,7 +17,7 @@ import mobappdev.example.sensorapplication.ui.components.IconButton
 import mobappdev.example.sensorapplication.ui.viewmodels.PersistenceVM
 
 @Composable
-fun PersistenceScreen(vm: PersistenceVM, onMeasurementButtonClicked: () -> Unit) {
+fun PersistenceScreen(vm: PersistenceVM, onMeasurementButtonClicked: (Int) -> Unit) {
     val summaryList by vm.measurementSummary.collectAsState()
 
     LazyColumn(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
@@ -30,9 +30,10 @@ fun PersistenceScreen(vm: PersistenceVM, onMeasurementButtonClicked: () -> Unit)
                     CardButton(
                         buttonText = it.timeOfMeasurement.toString() + "  |  " + it.type.toString(),
                         enabled = true,
-                        cardHeight = 50.dp,
-                        onButtonClick = onMeasurementButtonClicked
-                    )
+                        cardHeight = 50.dp
+                    ) {
+                        onMeasurementButtonClicked(it.id)
+                    }
                 }
                 Column(
                     modifier = Modifier.weight(0.2f),

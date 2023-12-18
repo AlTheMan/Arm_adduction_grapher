@@ -1,6 +1,5 @@
 package mobappdev.example.sensorapplication.ui.viewmodels
 
-import android.os.CountDownTimer
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
@@ -31,7 +30,6 @@ class InternalDataVM @Inject constructor(
     private val measurementsRepository: MeasurementsRepository
 ) : ViewModel() {
 
-    private var countDownTimer: CountDownTimer? = null
     private var timer: Job? = null
     private var activeTimer: Boolean = false
 
@@ -64,13 +62,16 @@ class InternalDataVM @Inject constructor(
             else -> {}
         }
         _internalUiState.update { it.copy(measuring = false) }
-        if (countDownTimer != null) {
-            cancelTimer()
-        }
         Log.d(TAG, "Stream stopped.")
         Log.d(TAG, "No of measurements saved: " + measurements.size)
-        _internalUiState.update { it.copy(showSaveButton = true) }
         stopCounter()
+        _internalUiState.update {
+            it.copy(
+                showSaveButton = true,
+                countDownTimer = _internalUiState.value.selectedTimerValue.toInt()
+            )
+        }
+
     }
 
     fun startMeasurement() {
@@ -109,45 +110,30 @@ class InternalDataVM @Inject constructor(
             _internalUiState.update { it.copy(timeInMs = 0) }
             activeTimer = true
             timer = viewModelScope.launch {
-                while (activeTimer) {
-                    delay(1)
-                    _internalUiState.update { it.copy(timeInMs = _internalUiState.value.timeInMs + 1) }
+                var counter = 0
+                while (_internalUiState.value.countDownTimer > 0) {
+                    delay(TimerValues.UPDATE_TIME)
+                    counter++
+                    _internalUiState.update { it.copy(timeInMs = _internalUiState.value.timeInMs + TimerValues.UPDATE_TIME) }
+                    if (counter == 10) {
+                        _internalUiState.update { it.copy(countDownTimer = _internalUiState.value.countDownTimer - 1) }
+                        counter = 0
+                    }
                 }
+                stopDataStream()
             }
         }
     }
 
-    private fun stopCounter(){
+    private fun stopCounter() {
         if (timer != null) {
             activeTimer = false
+            timer!!.cancel()
             timer = null
-            Log.d(TAG, "Timer: " + (_internalUiState.value.timeInMs / 1000.0)) // why isnt this showing any decimals?
         }
-    }
-
-    private fun startCountdownTimer(totalTime: Long) {
-        viewModelScope.launch {
-            countDownTimer =
-                object : CountDownTimer(totalTime, TimerValues.COUNTDOWN_INTERVAL.toLong()) {
-                    override fun onTick(millisUntilFinished: Long) {
-                        println("Seconds remaining: ${millisUntilFinished / TimerValues.COUNTDOWN_INTERVAL}")
-                        _internalUiState.update { it.copy(countDownTimer = (millisUntilFinished / TimerValues.COUNTDOWN_INTERVAL).toInt()) }
-                    }
-
-                    override fun onFinish() {
-                        stopDataStream()
-                        println("Timer finished")
-                    }
-                }
-            countDownTimer?.start()
-        }
-
     }
 
     private fun addToOffsets(measurement: AngleMeasurements.Measurement) {
-        if (countDownTimer == null && _internalUiState.value.selectedTimerValue < TimerValues.MAX_TIMER) {
-            startCountdownTimer(_internalUiState.value.selectedTimerValue.toLong() * TimerValues.COUNTDOWN_INTERVAL)
-        }
         if (timer == null) {
             startCounter()
             Log.d(TAG, "Counting up")
@@ -172,12 +158,6 @@ class InternalDataVM @Inject constructor(
         } else {
             _offsets.value = _offsets.value + Offset(xValue, yValue)
         }
-    }
-
-
-    private fun cancelTimer() {
-        countDownTimer?.cancel()
-        countDownTimer = null
     }
 
     fun setSingleMeasurement() {
