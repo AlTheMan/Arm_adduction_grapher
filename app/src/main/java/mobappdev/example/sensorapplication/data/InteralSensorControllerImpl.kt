@@ -115,6 +115,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _currentLinAccUI.update { null }
             sensorManager.unregisterListener(this, imuSensor)
             _streamingLinAcc.value = false
+            calculationModel.reset()
         }
     }
 
@@ -175,6 +176,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _currentGyroUI.update { null }
             sensorManager.unregisterListener(this, gyroSensor)
             _streamingGyro.value = false
+            calculationModel.reset()
         }
     }
 
