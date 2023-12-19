@@ -26,9 +26,6 @@ import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -392,7 +389,7 @@ class AndroidPolarController(
                         acc.x.toFloat(), acc.y.toFloat(), acc.z.toFloat()
                     ), Triple(
                         gyro.x, gyro.y, gyro.z
-                    )
+                    ), gyro.timeStamp
                 ), acc.timeStamp
             )
             updateAngleValues(angleMeasurements)

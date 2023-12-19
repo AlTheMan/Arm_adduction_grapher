@@ -14,7 +14,7 @@ object Canvas {
     }
 
     fun convertAngleToY(canvasHeight: Float, angle: Float): Float {
-        return canvasHeight / 2 + angle * 3
+        return angle * 3 + canvasHeight / 2
     }
 
 

@@ -137,7 +137,7 @@ class InternalSensorControllerImpl @Inject constructor(
             while (_streamingLinAcc.value && _streamingGyro.value) {
                 delay(UPDATE_DELAY)
                 val angle = calculationModel.getLinearAccelerationAngleWithGyroFilter(
-                    _currentLinAcc!!.axisValues, _currentGyro!!.axisValues
+                    _currentLinAcc!!.axisValues, _currentGyro!!.axisValues, _currentGyro!!.timestamp
                 )
                 val angleWithTimestamp = AngleMeasurements.Measurement(angle, _currentGyro!!.timestamp)
                 updateAngleValues(angleWithTimestamp)

@@ -15,6 +15,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.pow
 
 private const val TAG = "CSV"
 
@@ -87,12 +88,13 @@ class CsvExporter(private val context: Context) {
      */
     private fun truncateMeasurements(measurements: List<AngleMeasurements.Measurement>):List<AngleMeasurements.Measurement>{
         if(measurements.isEmpty()) return measurements
-        var initialTimestamp:Long=measurements.first().timestamp
-        var truncatedMeasurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
+
+        val initialTimestamp:Long=measurements.first().timestamp
+        val truncatedMeasurements: MutableList<MeasurementDTO> = mutableListOf()
         for(measurement in measurements){
-            var normalizedAngle = String.format("%.2f", measurement.angle).toFloat() //limits the angle to two decimals
-            var normalizedTimestamp = ((measurement.timestamp - initialTimestamp) * Math.pow(10.0,-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
-            truncatedMeasurements.add(AngleMeasurements.Measurement(normalizedAngle, normalizedTimestamp))
+            val normalizedAngle = String.format(Locale.US,"%.2f", measurement.angle).toFloat() //limits the angle to two decimals
+            val normalizedTimestamp = ((measurement.timestamp - initialTimestamp) * 10.0.pow(-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
+            truncatedMeasurements.add(MeasurementDTO(normalizedAngle, normalizedTimestamp))
         }
         return truncatedMeasurements
     }
@@ -101,7 +103,7 @@ class CsvExporter(private val context: Context) {
      * exports in csv format. Angle is in degrees (C) and timestamp in miliseconds.
      * Exports to download-folder in android phone
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+
     fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
         var truncatedMeasurements = truncateMeasurements(measurements)
         val dtoMeasurements = MeasurementConverters.toDto(truncatedMeasurements)
