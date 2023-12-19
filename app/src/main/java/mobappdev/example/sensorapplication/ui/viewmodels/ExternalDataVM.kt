@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.data.AngleMeasurements
+import mobappdev.example.sensorapplication.data.CsvExporter
 import mobappdev.example.sensorapplication.domain.PolarController
 import mobappdev.example.sensorapplication.persistence.MeasurementType
 import mobappdev.example.sensorapplication.persistence.MeasurementsRepository
@@ -41,6 +42,7 @@ private const val LOG_TAG = "DataVM"
 @HiltViewModel
 class ExternalDataVM @Inject constructor(
     private val polarController: PolarController,
+    private val csvExporter: CsvExporter,
     private val measurementsRepository: MeasurementsRepository
 ) : ViewModel() {
 
@@ -90,8 +92,12 @@ class ExternalDataVM @Inject constructor(
         stopDataStream()
         polarController.disconnectFromDevice(_deviceId.value)
     }
+    fun exportData() {
+        csvExporter.exportMeasurements(measurements)
+    }
 
     fun startMeasurement(){
+        measurements.clear()
         _state.update { it.copy(startTime = -1L, showSaveButton = false) }
         if (state.value.dualMeasurement){
             startExtAccAndGyro()

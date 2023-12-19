@@ -112,8 +112,6 @@ class InternalDataVM @Inject constructor(
 
     fun exportData() {
         csvExporter.exportMeasurements(measurements)
-        //csvExporter.exportData2()
-        //csvExporter.exportData()
     }
 
 

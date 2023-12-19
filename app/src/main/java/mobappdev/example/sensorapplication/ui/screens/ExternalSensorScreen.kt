@@ -95,6 +95,12 @@ fun ExternalSensorScreen(vm: ExternalDataVM) {
                 onButtonClick = vm::stopDataStream
             )
         } else {
+            CardButton(
+                buttonText = "Export",
+                enabled = true,
+                cardHeight = 70.dp,
+                onButtonClick = vm::exportData
+            )
             Row (horizontalArrangement = Arrangement.Center){
                 Column(modifier = Modifier.weight(1F)) {
                     SingleDualCardButton(buttonText = "Single", enabled = state.dualMeasurement , cardHeight = 50.dp, onButtonClick = vm::setSingleMeasurement)
