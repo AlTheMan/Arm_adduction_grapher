@@ -6,13 +6,15 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import androidx.annotation.RequiresApi
+import mobappdev.example.sensorapplication.persistence.MeasurementsEntity
 import java.io.File
 import mobappdev.example.sensorapplication.persistence.converters.MeasurementConverters
 import mobappdev.example.sensorapplication.persistence.dto.MeasurementDTO
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -22,7 +24,6 @@ private const val TAG = "CSV"
 class CsvExporter(private val context: Context) {
     //val csvExporter = CsvExporter(this) // 'this' refers to an Activity or Service context
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun exportDataTest() {
         val fileName = "AnalysisData.csv"
         val dataBuilder = StringBuilder()
@@ -39,7 +40,6 @@ class CsvExporter(private val context: Context) {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun saveToDownloadsFolder(context: Context, fileName: String, data: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //MediaStore API for API levels >=29
             Log.d(TAG, "running android version 11+, API level >=29")
@@ -81,18 +81,19 @@ class CsvExporter(private val context: Context) {
     }
 
 
+
     /**
      * Angle: limits the angle to two decimals and..
      * Timestamp: zeros the first number and reduces all consequent numbers by the same ammount. Counts in miliseconds innstead of nanoseconds
      */
-    private fun truncateMeasurements(measurements: List<AngleMeasurements.Measurement>):List<AngleMeasurements.Measurement>{
+    private fun truncateMeasurements(measurements: List<MeasurementDTO>):List<MeasurementDTO>{
         if(measurements.isEmpty()) return measurements
         var initialTimestamp:Long=measurements.first().timestamp
-        var truncatedMeasurements: MutableList<AngleMeasurements.Measurement> = mutableListOf()
+        var truncatedMeasurements: MutableList<MeasurementDTO> = mutableListOf()
         for(measurement in measurements){
             var normalizedAngle = String.format("%.2f", measurement.angle).toFloat() //limits the angle to two decimals
             var normalizedTimestamp = ((measurement.timestamp - initialTimestamp) * Math.pow(10.0,-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
-            truncatedMeasurements.add(AngleMeasurements.Measurement(normalizedAngle, normalizedTimestamp))
+            truncatedMeasurements.add(MeasurementDTO(normalizedAngle, normalizedTimestamp))
         }
         return truncatedMeasurements
     }
@@ -101,23 +102,41 @@ class CsvExporter(private val context: Context) {
      * exports in csv format. Angle is in degrees (C) and timestamp in miliseconds.
      * Exports to download-folder in android phone
      */
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
-        var truncatedMeasurements = truncateMeasurements(measurements)
-        val dtoMeasurements = MeasurementConverters.toDto(truncatedMeasurements)
-        exportMeasurements2(dtoMeasurements)
+    fun exportMeasurementsWithDBEntity(measurementEntity:  MeasurementsEntity){
+        var truncatedMeasurements = truncateMeasurements(measurementEntity.measurements)
+        exportMeasurements2(truncatedMeasurements, measurementEntity.timeOfMeasurement)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun exportMeasurements2(measurements: List<MeasurementDTO>) {
+    /**
+     * exports in csv format. Angle is in degrees (C) and timestamp in miliseconds.
+     * Exports to download-folder in android phone
+     */
+    fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
+        val dtoMeasurements = MeasurementConverters.toDto(measurements)
+        var truncatedMeasurements = truncateMeasurements(dtoMeasurements)
+        val currentDateTime = LocalDateTime.now()
+        exportMeasurements2(truncatedMeasurements, currentDateTime)
+    }
+
+    private fun exportMeasurements2(measurements: List<MeasurementDTO>, date: LocalDateTime) {
         val fileName = "adduction.csv"
         val dataBuilder = StringBuilder()
 
         //CAdding SV date header
-        val date = Date()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val formattedDate = dateFormat.format(date)
-        var headerDate = arrayOf("Date: ", formattedDate.toString())
+        //val date = Date()
+        //val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        //val formattedDate = dateFormat.format(date)
+        //var headerDate = arrayOf("Date: ", formattedDate.toString())
+        // Get the current LocalDateTime
+
+        // Create a DateTimeFormatter with your desired pattern
+        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+        // Format the current LocalDateTime using the formatter
+        val formattedDateTime = date.format(dateTimeFormatter)
+
+        // Create the header with the formatted date
+        var headerDate = arrayOf("Date", formattedDateTime)
         dataBuilder.append(headerDate.joinToString(",")).append("\n")
 
         // Adding CSV headers
