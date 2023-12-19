@@ -1,5 +1,6 @@
 package mobappdev.example.sensorapplication.data
 
+import android.util.Log
 import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -37,9 +38,10 @@ class CalculationModel {
         gyroscope: Triple<Float, Float, Float>,
         timestamp: Long
     ): Float {
-        val accFiltered = getLinearAccelerationAngle(axes)
+        //val accFiltered = getLinearAccelerationAngle(axes)
+        val accAsDegrees = radiansToDegrees(getPitchAngle(axes))
         val gyroAngles = getGyroAngles(gyroscope, timestamp)
-        return sensorFusionFilter(accFiltered, gyroAngles.third)
+        return sensorFusionFilter(accAsDegrees, gyroAngles.first)
     }
 
     private fun getGyroAngles(gyroscope: Triple<Float, Float, Float>, timeStamp: Long) : Triple<Float, Float, Float> {
@@ -47,16 +49,28 @@ class CalculationModel {
             lastGyroTimestamp = timeStamp
             return Triple(0F,0F,0F)
         }
+        Log.d(TAG, lastGyroTimestamp.toString())
+
         val deltaTime = (timeStamp - lastGyroTimestamp) / 1_000_000_000.0
+
+        Log.d(TAG, "Delta time: $deltaTime")
+
         lastGyroTimestamp = timeStamp
 
         val deltaAngleX = radiansToDegrees(gyroscope.first * deltaTime.toFloat())
         val deltaAngleY = radiansToDegrees(gyroscope.second * deltaTime.toFloat())
         val deltaAngleZ = radiansToDegrees(gyroscope.third * deltaTime.toFloat())
 
+        Log.d(TAG, "Delta angle: $deltaAngleZ")
+
+
         cumulativeGyroAngleX += deltaAngleX
         cumulativeGyroAngleY += deltaAngleY
         cumulativeGyroAngleZ += deltaAngleZ
+
+        Log.d(TAG, "Cum angle: $cumulativeGyroAngleZ")
+
+
 
         return Triple(cumulativeGyroAngleX, cumulativeGyroAngleY, cumulativeGyroAngleZ)
     }

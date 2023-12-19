@@ -347,10 +347,7 @@ class AndroidPolarController(
                                 Log.d(TAG, "ACC inside")
                                 for (data in data.samples) {
                                     accQueueUnprocessed.add(data)
-                                    Log.d(
-                                        TAG,
-                                        "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                                    )
+                                    //Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                                 }
                             }
 
@@ -359,10 +356,7 @@ class AndroidPolarController(
                                 // Handle gyroscope data
                                 for (data in data.samples) {
                                     gyroQueueUnprocessed.add(data)
-                                    Log.d(
-                                        TAG,
-                                        "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}"
-                                    )
+                                    //Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
                                 }
                                 retrieveAnglesFromQueues()
                             }
@@ -392,14 +386,11 @@ class AndroidPolarController(
                         acc.x.toFloat(), acc.y.toFloat(), acc.z.toFloat()
                     ), Triple(
                         gyro.x, gyro.y, gyro.z
-                    ), gyro.timeStamp
+                    ), gyro.timeStamp / 1000
                 ), acc.timeStamp
             )
             updateAngleValues(angleMeasurements)
-            Log.d(
-                TAG,
-                "ACC&GYRO angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString()
-            )
+            //Log.d(TAG,"ACC&GYRO angle: " + angleMeasurements.angle.toString() + ", time: " + angleMeasurements.timestamp.toString())
         }
     }
 

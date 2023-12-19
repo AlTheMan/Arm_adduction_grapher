@@ -131,7 +131,7 @@ class ExternalDataVM @Inject constructor(
             StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
             StreamType.FOREIGN_GYRO -> polarController.stopGyroStreaming()
             StreamType.FOREIGN_ACC_AND_GYRO -> {
-                polarController.stopAccStreaming(); polarController.stopAccStreaming()
+                polarController.stopAccAndGyroStreaming()
             }
 
             else -> {} // Do nothing
@@ -175,11 +175,11 @@ class ExternalDataVM @Inject constructor(
     }
 
     fun setSingleMeasurement() {
-        _state.value = _state.value.copy(dualMeasurement = false)
+        _state.value = _state.value.copy(dualMeasurement = false, startTime = -1)
     }
 
     fun setDualMeasurement() {
-        _state.value = state.value.copy(dualMeasurement = true)
+        _state.value = state.value.copy(dualMeasurement = true, startTime = -1)
     }
 
     private fun stopCounter() {
@@ -196,11 +196,14 @@ class ExternalDataVM @Inject constructor(
                 while (_state.value.countDownTimer > 0) {
                     delay(TimerValues.UPDATE_TIME)
                     _state.update { it.copy(timeInMs = _state.value.timeInMs + TimerValues.UPDATE_TIME) }
-                    counter++
-                    if (counter == 10) {
-                        _state.update { it.copy(countDownTimer = _state.value.countDownTimer - 1) }
-                        counter = 0
+                    if (_state.value.selectedTimerValue < TimerValues.MAX_TIMER) {
+                        counter++
+                        if (counter == 10) {
+                            _state.update { it.copy(countDownTimer = _state.value.countDownTimer - 1) }
+                            counter = 0
+                        }
                     }
+
                 }
                 stopDataStream()
             }
