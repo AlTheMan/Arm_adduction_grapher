@@ -36,6 +36,7 @@ import mobappdev.example.sensorapplication.ui.shared.Helpers
 import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import java.time.LocalDateTime
 import javax.inject.Inject
+import kotlin.math.floor
 
 private const val LOG_TAG = "DataVM"
 
@@ -236,7 +237,7 @@ class ExternalDataVM @Inject constructor(
         }
         val yValue = Canvas.convertAngleToY(_state.value.canvasHeight, measurement.angle)
         val xValue = Canvas.convertTimestampToX(measurement.timestamp, _state.value.selectedTimerValue, _state.value.startTime)
-        if (xValue >= _state.value.canvasWidth && _state.value.selectedTimerValue > 30 || xValue < 0) {
+        if (xValue >= _state.value.canvasWidth && floor(_state.value.selectedTimerValue) > 30 || xValue < 0) {
             _offsets.update { emptyList() }
             _state.update { it.copy(startTime = measurement.timestamp) }
         } else {

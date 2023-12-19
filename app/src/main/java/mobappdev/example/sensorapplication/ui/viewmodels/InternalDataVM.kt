@@ -23,6 +23,7 @@ import mobappdev.example.sensorapplication.ui.shared.Helpers
 import mobappdev.example.sensorapplication.ui.shared.TimerValues
 import java.time.LocalDateTime
 import javax.inject.Inject
+import kotlin.math.floor
 
 private const val TAG = "InternalDataVM"
 
@@ -130,6 +131,7 @@ class InternalDataVM @Inject constructor(
                     }
                 }
                 stopDataStream()
+                //Log.d(TAG, "Last x: " + _offsets.value.last().x)
             }
         }
     }
@@ -157,7 +159,7 @@ class InternalDataVM @Inject constructor(
             _internalUiState.value.selectedTimerValue,
             _internalUiState.value.startTime
         )
-        if (xValue >= _internalUiState.value.canvasWidth || xValue < 0) {
+        if (xValue >= _internalUiState.value.canvasWidth && floor(_internalUiState.value.selectedTimerValue) > 30 || xValue < 0) {
             _offsets.value = emptyList()
             _internalUiState.update { it.copy(startTime = measurement.timestamp) }
         } else {
