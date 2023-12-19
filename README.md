@@ -1,4 +1,4 @@
-A Kotlin application that uses internal sensors in smartphones or external sensors in polar sense sensors to calculate the angle of arm adduction.
+A Kotlin application that uses internal sensors (accelerometer and gyroscope) in smartphones or external sensors in polar sense sensors to calculate the angle of arm adduction.
 Shows a graph of adduction. You can save and export the data in CSV format. 
 <br>
 
