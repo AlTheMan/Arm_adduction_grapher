@@ -6,6 +6,9 @@ import io.reactivex.rxjava3.core.Single
 import java.util.Collections
 import java.util.EnumMap
 
+/**
+ * obligatory settings for the polar sensor to work
+ */
 object SettingsUtility {
 
     fun getSettings(
