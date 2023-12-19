@@ -91,7 +91,7 @@ class CsvExporter(private val context: Context) {
         var initialTimestamp:Long=measurements.first().timestamp
         var truncatedMeasurements: MutableList<MeasurementDTO> = mutableListOf()
         for(measurement in measurements){
-            var normalizedAngle = String.format("%.2f", measurement.angle).toFloat() //limits the angle to two decimals
+            var normalizedAngle = String.format(Locale.US, "%.2f", measurement.angle).toFloat() //limits the angle to two decimals. Uses Locale.US to ensure dot as decimal separator
             var normalizedTimestamp = ((measurement.timestamp - initialTimestamp) * Math.pow(10.0,-6.0)).toLong() //zeros the first number. counts in miliseconds innstead of nanoseconds
             truncatedMeasurements.add(MeasurementDTO(normalizedAngle, normalizedTimestamp))
         }
@@ -104,7 +104,7 @@ class CsvExporter(private val context: Context) {
      */
     fun exportMeasurementsWithDBEntity(measurementEntity:  MeasurementsEntity){
         var truncatedMeasurements = truncateMeasurements(measurementEntity.measurements)
-        exportMeasurements2(truncatedMeasurements, measurementEntity.timeOfMeasurement)
+        exportMeasurements2(truncatedMeasurements)
     }
 
     /**
@@ -114,19 +114,19 @@ class CsvExporter(private val context: Context) {
     fun exportMeasurements(measurements: List<AngleMeasurements.Measurement>){
         val dtoMeasurements = MeasurementConverters.toDto(measurements)
         var truncatedMeasurements = truncateMeasurements(dtoMeasurements)
-        val currentDateTime = LocalDateTime.now()
-        exportMeasurements2(truncatedMeasurements, currentDateTime)
+        //val currentDateTime = LocalDateTime.now()
+        exportMeasurements2(truncatedMeasurements)
     }
 
-    private fun exportMeasurements2(measurements: List<MeasurementDTO>, date: LocalDateTime) {
+    private fun exportMeasurements2(measurements: List<MeasurementDTO>) {
         val fileName = "adduction.csv"
         val dataBuilder = StringBuilder()
 
         //CAdding SV date header
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())         // Create a DateTimeFormatter with your desired pattern
-        val formattedDateTime = date.format(dateTimeFormatter)         // Format the current LocalDateTime using the formatter
-        var headerDate = arrayOf("Date", formattedDateTime)         // Create the header with the formatted date
-        dataBuilder.append(headerDate.joinToString(",")).append("\n")
+        //val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())         // Create a DateTimeFormatter with your desired pattern
+        //val formattedDateTime = date.format(dateTimeFormatter)         // Format the current LocalDateTime using the formatter
+        //var headerDate = arrayOf("Date", formattedDateTime)         // Create the header with the formatted date
+        //dataBuilder.append(headerDate.joinToString(",")).append("\n")
 
         // Adding CSV headers
         val headers = arrayOf("Angle (°C)", "Timestamp (ms)")
