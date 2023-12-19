@@ -115,6 +115,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _currentLinAccUI.update { null }
             sensorManager.unregisterListener(this, imuSensor)
             _streamingLinAcc.value = false
+            calculationModel.reset()
         }
     }
 
@@ -137,7 +138,7 @@ class InternalSensorControllerImpl @Inject constructor(
             while (_streamingLinAcc.value && _streamingGyro.value) {
                 delay(UPDATE_DELAY)
                 val angle = calculationModel.getLinearAccelerationAngleWithGyroFilter(
-                    _currentLinAcc!!.axisValues, _currentGyro!!.axisValues
+                    _currentLinAcc!!.axisValues, _currentGyro!!.axisValues, _currentGyro!!.timestamp
                 )
                 val angleWithTimestamp = AngleMeasurements.Measurement(angle, _currentGyro!!.timestamp)
                 updateAngleValues(angleWithTimestamp)
@@ -175,6 +176,7 @@ class InternalSensorControllerImpl @Inject constructor(
             _currentGyroUI.update { null }
             sensorManager.unregisterListener(this, gyroSensor)
             _streamingGyro.value = false
+            calculationModel.reset()
         }
     }
 

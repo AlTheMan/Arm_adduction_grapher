@@ -124,11 +124,14 @@ class InternalDataVM @Inject constructor(
                 while (_internalUiState.value.countDownTimer > 0) {
                     delay(TimerValues.UPDATE_TIME)
                     _internalUiState.update { it.copy(timeInMs = _internalUiState.value.timeInMs + TimerValues.UPDATE_TIME) }
-                    counter++
-                    if (counter == 10) {
-                        _internalUiState.update { it.copy(countDownTimer = _internalUiState.value.countDownTimer - 1) }
-                        counter = 0
+                    if (_internalUiState.value.selectedTimerValue < TimerValues.MAX_TIMER) {
+                        counter++
+                        if (counter == 10) {
+                            _internalUiState.update { it.copy(countDownTimer = _internalUiState.value.countDownTimer - 1) }
+                            counter = 0
+                        }
                     }
+
                 }
                 stopDataStream()
                 //Log.d(TAG, "Last x: " + _offsets.value.last().x)
@@ -168,11 +171,11 @@ class InternalDataVM @Inject constructor(
     }
 
     fun setSingleMeasurement() {
-        _internalUiState.update { it.copy(dualMeasurement = false) }
+        _internalUiState.update { it.copy(dualMeasurement = false, startTime = -1) }
     }
 
     fun setDualMeasurement() {
-        _internalUiState.update { it.copy(dualMeasurement = true) }
+        _internalUiState.update { it.copy(dualMeasurement = true, startTime = -1) }
     }
 
     fun setTimerValue(value: Float) {
