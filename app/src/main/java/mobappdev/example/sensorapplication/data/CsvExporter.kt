@@ -123,20 +123,9 @@ class CsvExporter(private val context: Context) {
         val dataBuilder = StringBuilder()
 
         //CAdding SV date header
-        //val date = Date()
-        //val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        //val formattedDate = dateFormat.format(date)
-        //var headerDate = arrayOf("Date: ", formattedDate.toString())
-        // Get the current LocalDateTime
-
-        // Create a DateTimeFormatter with your desired pattern
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-
-        // Format the current LocalDateTime using the formatter
-        val formattedDateTime = date.format(dateTimeFormatter)
-
-        // Create the header with the formatted date
-        var headerDate = arrayOf("Date", formattedDateTime)
+        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())         // Create a DateTimeFormatter with your desired pattern
+        val formattedDateTime = date.format(dateTimeFormatter)         // Format the current LocalDateTime using the formatter
+        var headerDate = arrayOf("Date", formattedDateTime)         // Create the header with the formatted date
         dataBuilder.append(headerDate.joinToString(",")).append("\n")
 
         // Adding CSV headers
