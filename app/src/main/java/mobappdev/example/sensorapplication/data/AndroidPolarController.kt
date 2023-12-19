@@ -392,7 +392,7 @@ class AndroidPolarController(
                         acc.x.toFloat(), acc.y.toFloat(), acc.z.toFloat()
                     ), Triple(
                         gyro.x, gyro.y, gyro.z
-                    )
+                    ), gyro.timeStamp
                 ), acc.timeStamp
             )
             updateAngleValues(angleMeasurements)
